@@ -1,6 +1,8 @@
 {
+    "jira_prod_url" : "https://ithelp.ucar.edu",
     "contacts" : 
     {
+        "primary" : "rpconroy@ucar.edu",
         "verification_email" : [
             "rpconroy@ucar.edu"
         ]
