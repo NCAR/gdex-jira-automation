@@ -1,10 +1,11 @@
 {
     "jira_prod_url" : "https://ithelp.ucar.edu",
+    "jira_test_url" : "https://stage-ithelp.ucar.edu",
     "contacts" : 
     {
-        "primary" : "rpconroy@ucar.edu",
+        "primary" : "caliepayne@ucar.edu",
         "verification_email" : [
-            "rpconroy@ucar.edu"
+            "caliepayne@ucar.edu"
         ]
     }
 }
