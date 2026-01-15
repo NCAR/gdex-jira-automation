@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import re
 import json
 
 import requests
@@ -10,63 +11,128 @@ import json
 from pathlib import Path
 from typing import Any
 
-def load_config(filename: str = "config.json") -> Any:
-    """
-    Load a JSON config file located in the same directory as this module.
-
-    Args:
-        filename: Name of the JSON file (default "config.json").
-
-    Returns:
-        The parsed JSON object (dict, list, etc.).
-    """
-    config_path = Path(__file__).parent / filename
-
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def get_jira_connection():
-    config = load_config()
-    jira_test_server = config.get('jira_test_url')
-    jira_prod_server = config.get('jira_prod_url')
+def get_jira_connection(
+        #config_file: str = "config.json",
+        production: bool = True,
+        prod_url= "https://ithelp.ucar.edu", 
+        test_url= "https://stage-ithelp.ucar.edu") -> JIRA:
     
-    # switch between test and prod as needed
-    server = jira_prod_server
-    jira_email = config['contacts'].get('primary', 'caliepayne@ucar.edu')
-    jira_api_token = os.environ.get('PROD_JIRA_API_TOKEN')
-    jira_instance = JIRA(options={'server': server},token_auth=jira_api_token)
+    server = prod_url if production else test_url
+    api_token = os.environ.get('PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN')
+    if not api_token:
+        raise EnvironmentError(
+            f"{'PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN'} is not set in environment variables."
+        )
+
+    jira_instance = JIRA(options={'server': server}, token_auth=api_token)
     return jira_instance
 
-def get_last_checked_ticket():
-    config = load_config()
-    last_checked_ticket = config.get('last_checked_ticket')
-    return last_checked_ticket
+def _clean_text(text: str) -> str|None:
+    """
+    Remove markup text (e.g. {color}, {code...})
+    """
+    if not text:
+        return None
 
-def get_unassigned_tickets(jira_connection):
-    start_from_issue = get_last_checked_ticket()
-    print(f"Starting from issue: {start_from_issue}")
-    jira_instance = jira_connection
-    issues = jira_instance.search_issues(
-    f'project = "NSF NCAR Research Data Help Desk" AND assignee = DATAHELP-SERVICES-CONSULTING and resolution = Unresolved ORDER BY  key ASC',
-    maxResults=50)
-    ticket_list = [issue.key for issue in issues]
-    return ticket_list
+    cleaned = re.sub(r'\{[^}]*\}', '', text)
+    cleaned = re.sub(r'\s+\n', '', cleaned)
+    cleaned = re.sub(r'\n{3,}', '', cleaned)
+    cleaned = cleaned.strip()
 
-def get_ticket_contents(ticket_id: str):
-    ticket_text = ""
-    return ticket_text
+    return cleaned
 
-def process_ticket(ticket_text: str):
-    pass
+def _issue_to_dict(issue) -> dict[str, Any]:
+    return {
+        "key": _clean_text(issue.key),
+        "reporter": {
+            "name": _clean_text(issue.fields.reporter.displayName),
+            "email": _clean_text(issue.fields.reporter.emailAddress),
+        } if issue.fields.reporter else None,
+        "summary": _clean_text(issue.fields.summary),
+        "description": _clean_text(issue.fields.description),
+        "created": _clean_text(issue.fields.created)
+    }
+
+def get_unassigned_tickets(jira_instance:str) -> list[dict[str, Any]]:
+    jira = jira_instance
+
+    issues = jira.search_issues(
+        'project = "NSF NCAR Research Data Help Desk" '
+        'AND assignee = DATAHELP-SERVICES-CONSULTING '
+        'AND resolution = Unresolved '
+        'ORDER BY key ASC',
+        maxResults=50
+    )
+
+    tickets = [_issue_to_dict(issue) for issue in issues]
+    return tickets
 
 
-def change_status(ticket, status):
-    pass
+# Extract DSID from text in both formats: dxxxxxx or dsxxx.x
+# dsxxx.x were mapped to dxxx00x in the new system
+# call format_dataset_id from gdex-web-portal/api/common.py 
+def get_dsid_from_json(json_text: json) -> str | None:
+    dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
+    for pattern in dsid_patterns:
+        match = re.search(pattern, json_text)
+        if match:
+            dsid = match.group(0)
+            # If the format is dsxxx.x, convert to dxxx00x
+            if dsid.startswith('ds'):
+                parts = dsid[2:].split('.')
+                if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+                    dsid = f'd{parts[0]}00{parts[1]}'
+                    return dsid
+            else:
+                return dsid
+    return None
+        
+     
+def get_dsid_owner_email(dsid:str) -> str | None:
+    """
+    Fetch the staff email for a given DSID from the UCAR GDEX API.
+
+    Args:
+        dsid (str): The DSID of the staff member.
+
+    Returns:
+        str: The email of the staff member, or None if not found/error.
+    """
+    url = f"https://gdex.ucar.edu/api/get_staff/{dsid}/"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        json_data = response.json()
+        
+        if "data" in json_data and json_data["data"]:
+            email = json_data["data"][0].get("email")
+            return email
+        else:
+            return None
+    except requests.RequestException as e:
+        print(f"Error fetching data: {e}")
+        return None
+
+def assign_jira_ticket(jira_instance: JIRA, ticket_id: str, email: str):
+    try:
+        jira_instance.assign_issue(ticket_id, email)
+        print(f"Successfully assigned ticket {ticket_id} to {email}")
+    except Exception as e:
+        print(f"Failed to assign ticket {ticket_id}: {e}")
 
 def main():
-    jira_instance = get_jira_connection()
-    get_unassigned_tickets(jira_instance)
-
+    jira_instance = get_jira_connection() # Defaults are set to production
+    ticket_list = get_unassigned_tickets(jira_instance)
+    for ticket in ticket_list:
+        ticket_id = ticket['key']
+        print(f"Processing ticket {ticket_id}...")
+        dsid = get_dsid_from_json(ticket['description'])
+        if dsid:
+            print(f"Found DSID: {dsid} \n")
+            email = get_dsid_owner_email(dsid)
+            assign_jira_ticket(jira_instance, ticket_id, email)
+        else:
+            print(f"No DSID found.\n")
 
 if __name__ == "__main__":
     main()
