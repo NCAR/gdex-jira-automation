@@ -51,12 +51,14 @@ def _issue_to_dict(issue) -> dict[str, Any]:
         "created": _clean_text(issue.fields.created)
     }
 
-def get_unassigned_service_tickets(jira_instance:str) -> list[dict[str, Any]]:
-    jira = jira_instance
-
-    issues = jira.search_issues(
-        'project = "NSF NCAR Research Data Help Desk" '
-        'AND assignee = DATAHELP-SERVICES-CONSULTING '
+# Get unassigned tickets from JIRA; service or curation based on flag
+def get_unassigned_tickets(
+        jira_instance:str,
+        service:bool=True) -> list[dict[str, Any]]:
+    
+    issues = jira_instance.search_issues(
+        f'project = "NSF NCAR Research Data Help Desk" '
+        f'AND assignee = DATAHELP-{"SERVICES-CONSULTING" if service else "CURATION-SUPPORT"} '
         'AND resolution = Unresolved '
         'ORDER BY key ASC',
         maxResults=50
@@ -147,20 +149,25 @@ def assign_jira_ticket(jira_instance: JIRA, ticket_id: str, email: str):
 
 def main():
     jira_instance = get_jira_connection() # Defaults are set to production
-    ticket_list = get_unassigned_service_tickets(jira_instance)
-    for ticket in ticket_list:
+
+    service_ticket_list = get_unassigned_tickets(jira_instance, service=True)
+    curation_ticket_list = get_unassigned_tickets(jira_instance, service=False)
+    for ticket in service_ticket_list:
         ticket_id = ticket['key']
-        print(f"Processing ticket {ticket_id}...")
+        print(f"--------------{ticket_id}----------SERVICES")
         dsid = get_dsid_from_json(ticket['description'])
         if dsid:
             #print(f"Found DSID: {dsid} \n")
             email = get_dsid_owner_email(dsid)
             if email: 
-                assign_jira_ticket(jira_instance, ticket_id, email)
-                
-            
+                assign_jira_ticket(jira_instance, ticket_id, email)   
         else:
             print(f"No DSID found.\n")
+    
+    for ticket in curation_ticket_list:
+        ticket_id = ticket['key']
+        print(f"--------------{ticket_id}----------CURATION")
+        return
 
 if __name__ == "__main__":
     main()
