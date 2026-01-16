@@ -29,4 +29,7 @@ jobs:
         
     - name: Pull latest changes
       run: git pull origin main
+
+    - name: Run Jira Client
+      run: src/jira_client.py
       
