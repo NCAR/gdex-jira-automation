@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 def get_jira_connection(
-        #config_file: str = "config.json",
         production: bool = True,
         prod_url= "https://ithelp.ucar.edu", 
         test_url= "https://stage-ithelp.ucar.edu") -> JIRA:
@@ -38,7 +37,6 @@ def _clean_text(text: str) -> str|None:
     cleaned = re.sub(r'\s+\n', '', cleaned)
     cleaned = re.sub(r'\n{3,}', '', cleaned)
     cleaned = cleaned.strip()
-
     return cleaned
 
 def _issue_to_dict(issue) -> dict[str, Any]:
@@ -53,12 +51,14 @@ def _issue_to_dict(issue) -> dict[str, Any]:
         "created": _clean_text(issue.fields.created)
     }
 
-def get_unassigned_tickets(jira_instance:str) -> list[dict[str, Any]]:
-    jira = jira_instance
-
-    issues = jira.search_issues(
-        'project = "NSF NCAR Research Data Help Desk" '
-        'AND assignee = DATAHELP-SERVICES-CONSULTING '
+# Get unassigned tickets from JIRA; service or curation based on flag
+def get_unassigned_tickets(
+        jira_instance:str,
+        service:bool=True) -> list[dict[str, Any]]:
+    
+    issues = jira_instance.search_issues(
+        f'project = "NSF NCAR Research Data Help Desk" '
+        f'AND assignee = DATAHELP-{"SERVICES-CONSULTING" if service else "CURATION-SUPPORT"} '
         'AND resolution = Unresolved '
         'ORDER BY key ASC',
         maxResults=50
@@ -73,6 +73,8 @@ def get_unassigned_tickets(jira_instance:str) -> list[dict[str, Any]]:
 # call format_dataset_id from gdex-web-portal/api/common.py 
 def get_dsid_from_json(json_text: json) -> str | None:
     dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
+    if not json_text:
+        return None
     for pattern in dsid_patterns:
         match = re.search(pattern, json_text)
         if match:
@@ -113,26 +115,59 @@ def get_dsid_owner_email(dsid:str) -> str | None:
         print(f"Error fetching data: {e}")
         return None
 
+#Customer Comment 
+def add_comment_to_ticket(jira_instance: JIRA, ticket_id: str, comment: str):
+    try:
+        jira_instance.add_comment(ticket_id, comment)
+        print(f"Successfully added comment to ticket {ticket_id}")
+    except Exception as e:
+        print(f"Failed to add comment to ticket {ticket_id}: {e}")
+
+#Comment restricted to internal team only
+def add_internal_note_to_ticket(jira_instance: JIRA, ticket_id: str, note: str):
+    try:
+        jira_instance.add_comment(
+            ticket_id,
+            note,
+            visibility={
+                "type": "role",
+                "value": "Service Desk Team"
+            }
+        )
+        print(f"Successfully added internal note to ticket {ticket_id}")
+    except Exception as e:
+        print(f"Failed to add internal note to ticket {ticket_id}: {e}")
+
 def assign_jira_ticket(jira_instance: JIRA, ticket_id: str, email: str):
     try:
         jira_instance.assign_issue(ticket_id, email)
         print(f"Successfully assigned ticket {ticket_id} to {email}")
+        note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
+        add_internal_note_to_ticket(jira_instance, ticket_id, note)
     except Exception as e:
         print(f"Failed to assign ticket {ticket_id}: {e}")
 
 def main():
     jira_instance = get_jira_connection() # Defaults are set to production
-    ticket_list = get_unassigned_tickets(jira_instance)
-    for ticket in ticket_list:
+
+    service_ticket_list = get_unassigned_tickets(jira_instance, service=True)
+    curation_ticket_list = get_unassigned_tickets(jira_instance, service=False)
+    for ticket in service_ticket_list:
         ticket_id = ticket['key']
-        print(f"Processing ticket {ticket_id}...")
+        print(f"--------------{ticket_id}----------SERVICES")
         dsid = get_dsid_from_json(ticket['description'])
         if dsid:
-            print(f"Found DSID: {dsid} \n")
+            #print(f"Found DSID: {dsid} \n")
             email = get_dsid_owner_email(dsid)
-            assign_jira_ticket(jira_instance, ticket_id, email)
+            if email: 
+                assign_jira_ticket(jira_instance, ticket_id, email)   
         else:
             print(f"No DSID found.\n")
+    
+    for ticket in curation_ticket_list:
+        ticket_id = ticket['key']
+        print(f"--------------{ticket_id}----------CURATION")
+        return
 
 if __name__ == "__main__":
     main()
