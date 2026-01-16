@@ -42,7 +42,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
     - name: Run Jira Client
-      run: python src/jira_client.py
+      run: python src/gdex-jira/jira_client.py
       env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
           
