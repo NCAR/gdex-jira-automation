@@ -13,6 +13,7 @@ permissions:
 jobs:
   health-check:
     runs-on: ubuntu-latest
+    environment: PROD_JIRA_API_TOKEN
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
     
@@ -26,10 +27,23 @@ jobs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        
+    
     - name: Pull latest changes
       run: git pull origin main
-
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+  
+    - name: Install Dependencies 
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
     - name: Run Jira Client
-      run: src/jira_client.py
+      run: python src/jira_client.py
+      env:
+          PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
+          
       
