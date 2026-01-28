@@ -15,6 +15,12 @@ def get_jira_connection(
         production: bool = True,
         prod_url= "https://ithelp.ucar.edu", 
         test_url= "https://stage-ithelp.ucar.edu") -> JIRA:
+    """
+    Establishes a connection to the JIRA instance.
+    Uses environment variables for API tokens:
+    - PROD_JIRA_API_TOKEN for production
+    - TEST_JIRA_API_TOKEN for test/staging      
+    """
     
     server = prod_url if production else test_url
     api_token = os.environ.get('PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN')
@@ -27,9 +33,11 @@ def get_jira_connection(
     return jira_instance
 
 def _clean_text(text: str) -> str|None:
+    
     """
     Remove markup text (e.g. {color}, {code...})
     """
+   
     if not text:
         return None
 
@@ -40,6 +48,9 @@ def _clean_text(text: str) -> str|None:
     return cleaned
 
 def _issue_to_dict(issue) -> dict[str, Any]:
+    """
+    Converts a JIRA issue object to a claned dictionary.
+    """
     return {
         "key": _clean_text(issue.key),
         "reporter": {
@@ -51,11 +62,18 @@ def _issue_to_dict(issue) -> dict[str, Any]:
         "created": _clean_text(issue.fields.created)
     }
 
-# Get unassigned tickets from JIRA; service or curation based on flag
 def get_unassigned_tickets(
+
         jira_instance:str,
         service:bool=True) -> list[dict[str, Any]]:
-    
+    """
+    Fetch unassigned tickets from JIRA for either Services Consulting or Curation Support.
+    Args:
+        jira_instance (JIRA): The JIRA instance to query.
+        service (bool): If True, fetch tickets for Services Consulting; if False, for Curation Support.    
+    Returns:
+        list[dict]: A list of dictionaries representing unassigned tickets.
+    """
     issues = jira_instance.search_issues(
         f'project = "NSF NCAR Research Data Help Desk" '
         f'AND assignee = DATAHELP-{"SERVICES-CONSULTING" if service else "CURATION-SUPPORT"} '
@@ -68,10 +86,14 @@ def get_unassigned_tickets(
     return tickets
 
 
-# Extract DSID from text in both formats: dxxxxxx or dsxxx.x
-# dsxxx.x were mapped to dxxx00x in the new system
-# call format_dataset_id from gdex-web-portal/api/common.py 
 def get_dsid_from_json(json_text: json) -> str | None:
+    """
+    Extract DSID from JSON text using regex patterns.
+    Args:
+        json_text (json): The JSON text to search for DSID.
+    Returns:
+        str: The extracted DSID, or None if not found.
+    """
     dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
     if not json_text:
         return None
@@ -115,8 +137,17 @@ def get_dsid_owner_email(dsid:str) -> str | None:
         print(f"Error fetching data: {e}")
         return None
 
-#Customer Comment 
+ 
 def add_comment_to_ticket(jira_instance: JIRA, ticket_id: str, comment: str):
+    """
+    Adds a customer comment to a JIRA ticket.
+    Args:
+        jira_instance (JIRA): The JIRA instance.
+        ticket_id (str): The ID of the ticket to add the comment to.
+        comment (str): The comment text to add.
+    Returns:
+        None
+    """
     try:
         jira_instance.add_comment(ticket_id, comment)
         print(f"Successfully added comment to ticket {ticket_id}")
@@ -125,6 +156,15 @@ def add_comment_to_ticket(jira_instance: JIRA, ticket_id: str, comment: str):
 
 #Comment restricted to internal team only
 def add_internal_note_to_ticket(jira_instance: JIRA, ticket_id: str, note: str):
+    """
+    Adds an internal note to a JIRA ticket via internal comment.
+    Args:
+        jira_instance (JIRA): The JIRA instance.
+        ticket_id (str): The ID of the ticket to add the note to.
+        note (str): The note text to add.
+    Returns:
+        None
+    """
     try:
         jira_instance.add_comment(
             ticket_id,
@@ -139,6 +179,15 @@ def add_internal_note_to_ticket(jira_instance: JIRA, ticket_id: str, note: str):
         print(f"Failed to add internal note to ticket {ticket_id}: {e}")
 
 def assign_jira_ticket(jira_instance: JIRA, ticket_id: str, email: str):
+    """
+    Assigns a JIRA ticket to a user.
+    Args:
+        jira_instance (JIRA): The JIRA instance.
+        ticket_id (str): The ID of the ticket to assign.
+        email (str): The email of the user to assign the ticket to.
+    Returns:
+        None
+    """
     try:
         jira_instance.assign_issue(ticket_id, email)
         print(f"Successfully assigned ticket {ticket_id} to {email}")
