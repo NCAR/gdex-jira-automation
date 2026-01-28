@@ -6,6 +6,7 @@ import json
 
 import requests
 from jira import JIRA
+from collections import Counter
 
 import json
 from pathlib import Path
@@ -54,7 +55,6 @@ class GdexJiraAutomator:
         cleaned = cleaned.strip()
         return cleaned
 
-
     def _issue_to_dict(self,issue) -> dict[str, Any]:
         """
         Converts a JIRA issue object to a claned dictionary.
@@ -69,6 +69,31 @@ class GdexJiraAutomator:
             "description": self._clean_text(issue.fields.description),
             "created": self._clean_text(issue.fields.created)
         }
+
+    def _has_been_assigned_before(self, issue:str) -> dict[str, bool]:
+        """
+        Check if a JIRA issue has been assigned to DATAHELP-SERVICES-CONSULTING or DATAHELP-CURATION-SUPPORT more than once.
+        Args:
+            issue (str): The JIRA issue key.
+        Returns:
+            dict: A dictionary representing the issue.
+        """
+
+        ticket = self.jira.issue(issue, expand='changelog')
+        history = []
+        for item in ticket.changelog.histories:
+            for change in item.items:
+                if change.field == 'assignee':
+                    history.append(change.toString)
+        DATAHELP_count = Counter(history)
+        if DATAHELP_count["DATAHELP-SERVICES-CONSULTING"] > 1 or DATAHELP_count["DATAHELP-CURATION-SUPPORT"] > 1:
+            print(f"Issue {ticket.key} has been assigned before.")
+            ticket_info = [ticket.key, True]
+            print(ticket_info)
+            return ticket_info
+        else:
+            return [ticket.key, True]
+            
 
     def get_unassigned_tickets(
             self,
@@ -88,7 +113,9 @@ class GdexJiraAutomator:
             'ORDER BY key ASC',
             maxResults=50
         )
-
+        #only stores tickets that have not been assigned before
+        tickets = [self.has_been_assigned_before(issue.key) for issue in issues]
+        #convert to dict
         tickets = [self._issue_to_dict(issue) for issue in issues]
         return tickets
 
@@ -205,7 +232,7 @@ class GdexJiraAutomator:
 
 def main():
     automator = GdexJiraAutomator(production_server=True)
-    automator.assign_jira_ticket("DATAHELP-5596",'caliepayne@ucar.edu')
+    automator.has_been_assigned_before("DATAHELP-5596")
 
     # service_ticket_list = automator.get_unassigned_tickets(service=True)
     # curation_ticket_list = automator.get_unassigned_tickets(service=False)
@@ -214,18 +241,18 @@ def main():
     #     print(f"--------------{ticket_id}----------SERVICES")
     #     dsid = automator.get_dsid_from_json(ticket['description'])
     #     if dsid:
-    #         #print(f"Found DSID: {dsid} \n")
+    #         print(f"Found DSID: {dsid} \n")
     #         email = automator.get_dsid_owner_email(dsid)
     #         print(email)
-    #         #if email: 
-    #             #automator.assign_jira_ticket(ticket_id, email)   
+    #         if email: 
+    #             automator.assign_jira_ticket(ticket_id, email)   
     #     else:
     #         print(f"No DSID found.\n")
     
     # for ticket in curation_ticket_list:
     #     ticket_id = ticket['key']
     #     print(f"--------------{ticket_id}----------CURATION")
-    #     return
+
 
 if __name__ == "__main__":
     main()
