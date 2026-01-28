@@ -3,9 +3,10 @@ import sys
 import os
 import re
 import json
+import logging
 
 import requests
-from jira import JIRA
+from jira import JIRA, JIRAError
 from collections import Counter
 
 import json
@@ -15,13 +16,28 @@ from typing import Any
 
 class GdexJiraAutomator:
     def __init__(self, production_server: bool = True):
-        self.jira = self._get_jira_connection(production=production_server)
+        try:
+            self.jira = self._get_jira_connection(production=production_server)
+            logging.info("Connected to JIRA successfully.")
+        except EnvironmentError as e:
+            logging.error(f"Environment variable missing: {e}")
+            self.jira = None
+        except JIRAError as e:
+            logging.error(f"Failed to connect to JIRA: {e}")
+            self.jira = None
+        except requests.RequestException as e:
+            logging.error(f"Network/API error when connecting to jira: {e}")
+            self.jira = None
+        except Exception as e:
+            logging.error(f"Unexpected error during JIRA connection: {e}")
+            self.jira = None
 
     def _get_jira_connection(
             self,
             production: bool = True,
             prod_url= "https://ithelp.ucar.edu", 
             test_url= "https://stage-ithelp.ucar.edu") -> JIRA:
+        
         """
         Establishes a connection to the JIRA instance.
         Uses environment variables for API tokens:
@@ -35,7 +51,6 @@ class GdexJiraAutomator:
             raise EnvironmentError(
                 f"{'PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN'} is not set in environment variables."
             )
-
         jira_instance = JIRA(options={'server': server}, token_auth=api_token)
         return jira_instance
 
@@ -56,9 +71,11 @@ class GdexJiraAutomator:
         return cleaned
 
     def _issue_to_dict(self,issue) -> dict[str, Any]:
+
         """
-        Converts a JIRA issue object to a claned dictionary.
+        Converts a JIRA issue object to a cleaned dictionary.
         """
+
         return {
             "key": self._clean_text(issue.key),
             "reporter": {
@@ -71,6 +88,7 @@ class GdexJiraAutomator:
         }
 
     def _has_been_assigned_before(self, issue:str) -> dict[str, bool]:
+
         """
         Check if a JIRA issue has been assigned to DATAHELP-SERVICES-CONSULTING or DATAHELP-CURATION-SUPPORT more than once.
         Args:
@@ -78,8 +96,16 @@ class GdexJiraAutomator:
         Returns:
             dict: A dictionary representing the issue.
         """
+        if not self.jira:
+            logging.warning("Cannot check if ticket has been assigned before: Jira Connection not available.")
+            return
 
-        ticket = self.jira.issue(issue, expand='changelog')
+        try:
+            ticket = self.jira.issue(issue, expand='changelog')
+        except JIRAError as e:
+            logging.error(f"Failed to get Jira changelog for {issue}: {e}")
+            return None
+        
         history = []
         for item in ticket.changelog.histories:
             for change in item.items:
@@ -98,6 +124,7 @@ class GdexJiraAutomator:
     def get_unassigned_tickets(
             self,
             service:bool=True) -> list[dict[str, Any]]:
+        
         """
         Fetch unassigned tickets from JIRA for either Services Consulting or Curation Support.
         Args:
@@ -106,21 +133,31 @@ class GdexJiraAutomator:
         Returns:
             list[dict]: A list of dictionaries representing unassigned tickets.
         """
-        issues = self.jira.search_issues(
-            f'project = "NSF NCAR Research Data Help Desk" '
-            f'AND assignee = DATAHELP-{"SERVICES-CONSULTING" if service else "CURATION-SUPPORT"} '
-            'AND resolution = Unresolved '
-            'ORDER BY key ASC',
-            maxResults=50
-        )
+        if not self.jira:
+            logging.warning("Cannot fetch unassigned tickets: Jira Connection not available.")
+            return
+        
+        try:
+            issues = self.jira.search_issues(
+                f'project = "NSF NCAR Research Data Help Desk" '
+                f'AND assignee = DATAHELP-{"SERVICES-CONSULTING" if service else "CURATION-SUPPORT"} '
+                'AND resolution = Unresolved '
+                'ORDER BY key ASC',
+                maxResults=50
+            )
+        except JIRAError as e:
+            logging.error(f"Failed to pull unassigned tickets from Jira: {e}")
+            return None
+        
         #only stores tickets that have not been assigned before
-        tickets = [self.has_been_assigned_before(issue.key) for issue in issues]
+        tickets = [self._has_been_assigned_before(issue.key) for issue in issues]
         #convert to dict
         tickets = [self._issue_to_dict(issue) for issue in issues]
         return tickets
 
     @staticmethod
-    def get_dsid_from_json(json_text: json) -> str | None:
+    def get_dsid_from_json(json_text: str) -> str | None:
+
         """
         Extract DSID from JSON text using regex patterns.
         Args:
@@ -128,14 +165,19 @@ class GdexJiraAutomator:
         Returns:
             str: The extracted DSID, or None if not found.
         """
-        dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
         if not json_text:
             return None
+        if not isinstance(json_text, str):
+            raise TypeError(f"Text must be in JSON format, got {type(json_text).__name__}")
+        
+        dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
+
         for pattern in dsid_patterns:
             match = re.search(pattern, json_text)
             if match:
                 dsid = match.group(0)
                 # If the format is dsxxx.x, convert to dxxx00x
+                # TODO: Consider dsid conversion to be its own function so it can be used elsewhere
                 if dsid.startswith('ds'):
                     parts = dsid[2:].split('.')
                     if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
@@ -144,7 +186,8 @@ class GdexJiraAutomator:
                 else:
                     return dsid
         return None
-            
+    
+     
     @staticmethod
     def get_dsid_owner_email(dsid:str) -> str | None:
         """
@@ -156,22 +199,51 @@ class GdexJiraAutomator:
         Returns:
             str: The email of the staff member, or None if not found/error.
         """
+        if not isinstance(dsid, str):
+            raise TypeError(f"dsid must be a string, got {type(dsid).__name__}")
+        
+        # TODO: Check for dsid format here 
+        
         url = f"https://gdex.ucar.edu/api/get_staff/{dsid}/"
+
         try:
             response = requests.get(url)
             response.raise_for_status()
-            json_data = response.json()
-            
-            if "data" in json_data and json_data["data"]:
-                email = json_data["data"][0].get("email")
-                return email
-            else:
-                return None
+        except requests.ConnectionError as e:
+            logging.error(f"Connection failed when trying to fetch DSID {dsid} from GDEX API: {e}")
+            return None
+        except requests.Timeout:
+            logging.error(f"Request timed out while fetching DSID {dsid} from GDEX API.")
+            return None
+        except requests.HTTPError as e:
+            logging.error(f"HTTP error {e.response.status_code} fetching DSID {dsid} from GDEX API: {e}")
+            return None
         except requests.RequestException as e:
-            print(f"Error fetching data: {e}")
+            logging.error(f"Network/API error fertching DSID {dsid} from GDEX API: {e}")
             return None
 
-    
+        try:
+            json_data = response.json()
+        except ValueError as e:
+            print(f"Failed to decod JSON for {dsid} from GDEX API: {e}")
+            return None
+        
+        try:
+            if "data" in json_data and json_data["data"]:
+                email = json_data["data"][0].get("email")
+                if not email:
+                    print(f"No email found for DSID {dsid} in GDEX API response")
+                return email
+            else:
+                print(f"No staff data returned for DSID {dsid} from GDEX API: {e}")
+                return None
+        except (KeyError, TypeError) as e:
+            print(f"Unexpected data structure for {dsid} via GDEX API: {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error processing DSID {dsid} data via GDEX API: {e}")
+            return None
+
     def add_comment_to_ticket(self, ticket_id: str, comment: str):
         """
         Adds a customer comment to a JIRA ticket.
@@ -184,12 +256,14 @@ class GdexJiraAutomator:
         """
         try:
             self.jira.add_comment(ticket_id, comment)
-            print(f"Successfully added comment to ticket {ticket_id}")
+            logging.info(f"Successfully added comment to ticket {ticket_id}")
+        except JIRAError as e:
+            logging.error(f"JIRA API error adding comment to ticket {ticket_id}: {e}")
         except Exception as e:
-            print(f"Failed to add comment to ticket {ticket_id}: {e}")
+            logging.error(f"Unexpected error adding comment to ticket {ticket_id}: {e}")
 
-    #Comment restricted to internal team only
     def add_internal_note_to_ticket(self, ticket_id: str, note: str):
+
         """
         Adds an internal note to a JIRA ticket via internal comment.
         Args:
@@ -199,6 +273,7 @@ class GdexJiraAutomator:
         Returns:
             None
         """
+
         try:
             self.jira.add_comment(
                 ticket_id,
@@ -208,11 +283,14 @@ class GdexJiraAutomator:
                     "value": "Service Desk Team"
                 }
             )
-            print(f"Successfully added internal note to ticket {ticket_id}")
+            logging.info(f"Successfully added internal note to ticket {ticket_id}")
+        except JIRAError as e:
+            logging.error(f"JIRA API error adding internal note to ticket {ticket_id}: {e}")
         except Exception as e:
-            print(f"Failed to add internal note to ticket {ticket_id}: {e}")
+            logging.error(f"Unexpected error adding internal note to ticket {ticket_id}: {e}")
 
     def assign_jira_ticket(self, ticket_id: str, email: str):
+
         """
         Assigns a JIRA ticket to a user.
         Args:
@@ -227,31 +305,32 @@ class GdexJiraAutomator:
             print(f"Successfully assigned ticket {ticket_id} to {email}")
             note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
             self.add_internal_note_to_ticket(ticket_id, note)
+        except JIRAError as e:
+            logging.error(f"JIRA API error when assigning {ticket_id}: {e}")
         except Exception as e:
-            print(f"Failed to assign ticket {ticket_id}: {e}")
+            logging.error(f"Unexpected error assigning {ticket_id} to {email}: {e}")
 
 def main():
     automator = GdexJiraAutomator(production_server=True)
-    automator.has_been_assigned_before("DATAHELP-5596")
 
-    # service_ticket_list = automator.get_unassigned_tickets(service=True)
-    # curation_ticket_list = automator.get_unassigned_tickets(service=False)
-    # for ticket in service_ticket_list:
-    #     ticket_id = ticket['key']
-    #     print(f"--------------{ticket_id}----------SERVICES")
-    #     dsid = automator.get_dsid_from_json(ticket['description'])
-    #     if dsid:
-    #         print(f"Found DSID: {dsid} \n")
-    #         email = automator.get_dsid_owner_email(dsid)
-    #         print(email)
-    #         if email: 
-    #             automator.assign_jira_ticket(ticket_id, email)   
-    #     else:
-    #         print(f"No DSID found.\n")
+    service_ticket_list = automator.get_unassigned_tickets(service=True)
+    curation_ticket_list = automator.get_unassigned_tickets(service=False)
+    for ticket in service_ticket_list:
+        ticket_id = ticket['key']
+        print(f"--------------{ticket_id}----------SERVICES")
+        dsid = automator.get_dsid_from_json(ticket['description'])
+        if dsid:
+            print(f"Found DSID: {dsid} \n")
+            email = automator.get_dsid_owner_email(dsid)
+            print(email)
+            if email: 
+                automator.assign_jira_ticket(ticket_id, email)   
+        else:
+            print(f"No DSID found.\n")
     
-    # for ticket in curation_ticket_list:
-    #     ticket_id = ticket['key']
-    #     print(f"--------------{ticket_id}----------CURATION")
+    for ticket in curation_ticket_list:
+        ticket_id = ticket['key']
+        print(f"--------------{ticket_id}----------CURATION")
 
 
 if __name__ == "__main__":
