@@ -156,7 +156,7 @@ class GdexJiraAutomator:
         return tickets
 
     @staticmethod
-    def get_dsid_from_json(json_text: str) -> str | None:
+    def get_dsid_from_json(ticket_text: dict) -> str | None:
 
         """
         Extract DSID from JSON text using regex patterns.
@@ -165,17 +165,18 @@ class GdexJiraAutomator:
         Returns:
             str: The extracted DSID, or None if not found.
         """
-        if not json_text:
+        if not ticket_text:
             return None
-        if not isinstance(json_text, str):
-            raise TypeError(f"Text must be in JSON format, got {type(json_text).__name__}")
+        if not isinstance(ticket_text, dict):
+            raise TypeError(f"Text must be in dict format, got {type(ticket_text).__name__}")
         
         dsid_patterns = [r'\bd\d{6}\b', r'\bds\d{3}\.\d\b']  # match d + 6 digits as a whole word
 
         for pattern in dsid_patterns:
-            match = re.search(pattern, json_text)
+            text = " ".join(map(str, ticket_text.values()))
+            match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                dsid = match.group(0)
+                dsid = match.group().lower()
                 # If the format is dsxxx.x, convert to dxxx00x
                 # TODO: Consider dsid conversion to be its own function so it can be used elsewhere
                 if dsid.startswith('ds'):
@@ -318,7 +319,7 @@ def main():
     for ticket in service_ticket_list:
         ticket_id = ticket['key']
         print(f"--------------{ticket_id}----------SERVICES")
-        dsid = automator.get_dsid_from_json(ticket['description'])
+        dsid = automator.get_dsid_from_json(ticket)
         if dsid:
             print(f"Found DSID: {dsid} \n")
             email = automator.get_dsid_owner_email(dsid)
