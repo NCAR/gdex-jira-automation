@@ -3,7 +3,7 @@ name: Gather run
 on:
   schedule:
     # Run every 5 minutes
-    - cron: '*/60 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch: # Allow manual trigger
 
 permissions:
