@@ -4,6 +4,7 @@ import os
 import re
 import json
 import logging
+import random
 
 import requests
 from jira import JIRA, JIRAError
@@ -290,7 +291,7 @@ class GdexJiraAutomator:
         except Exception as e:
             logging.error(f"Unexpected error adding internal note to ticket {ticket_id}: {e}")
 
-    def assign_jira_ticket(self, ticket_id: str, email: str):
+    def assign_jira_ticket(self, ticket_id: str, email: str, note):
 
         """
         Assigns a JIRA ticket to a user.
@@ -304,7 +305,7 @@ class GdexJiraAutomator:
         try:
             self.jira.assign_issue(ticket_id, email)
             print(f"Successfully assigned ticket {ticket_id} to {email}")
-            note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
+            #note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
             self.add_internal_note_to_ticket(ticket_id, note)
         except JIRAError as e:
             logging.error(f"JIRA API error when assigning {ticket_id}: {e}")
@@ -325,7 +326,14 @@ def main():
             email = automator.get_dsid_owner_email(dsid)
             print(email)
             if email: 
-                automator.assign_jira_ticket(ticket_id, email)   
+                if email = 'chifan@ucar.edu'
+                    assignee_list = ["dattore@ucar.edu", "rpconroy@ucar.edu", "caliepayne@ucar.edu", "davestep@ucar.edu", "tcram@ucar.edu", "chiaweih@ucar.edu"]
+                    email = random.choice(assignee_list)
+                    note = f" Chi-fan's ticket randomly assigned to {email}. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
+                    automator.assign_jira_ticket(ticket_id, email, note)
+                else:
+                    note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
+                    automator.assign_jira_ticket(ticket_id, email, note)   
         else:
             print(f"No DSID found.\n")
     
