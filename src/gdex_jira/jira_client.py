@@ -326,7 +326,7 @@ def main():
             email = automator.get_dsid_owner_email(dsid)
             print(email)
             if email: 
-                if email == 'chifan@ucar.edu'
+                if email == 'chifan@ucar.edu':
                     assignee_list = ["dattore@ucar.edu", "rpconroy@ucar.edu", "caliepayne@ucar.edu", "davestep@ucar.edu", "tcram@ucar.edu", "chiaweih@ucar.edu"]
                     email = random.choice(assignee_list)
                     note = f" Chi-fan's ticket randomly assigned to {email}. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
