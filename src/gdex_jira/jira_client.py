@@ -175,6 +175,7 @@ class GdexJiraAutomator:
 
         for pattern in dsid_patterns:
             text = " ".join(map(str, ticket_text.values()))
+            print(text)
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 dsid = match.group().lower()
