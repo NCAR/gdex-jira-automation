@@ -68,7 +68,7 @@ class GdexJiraAutomator:
         cleaned = re.sub(r'\{[^}]*\}', '', text)
         cleaned = re.sub(r'\s+\n', '', cleaned)
         cleaned = re.sub(r'\n{3,}', '\n', cleaned)
-        cleaned = cleaned.strip()
+        #cleaned = cleaned.strip()
         return cleaned
 
     def _issue_to_dict(self,issue) -> dict[str, Any]:
