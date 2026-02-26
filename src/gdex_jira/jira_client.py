@@ -66,8 +66,8 @@ class GdexJiraAutomator:
             return None
 
         cleaned = re.sub(r'\{[^}]*\}', '', text)
-        cleaned = re.sub(r'\s+\n', '', cleaned)
-        cleaned = re.sub(r'\n{3,}', '\n', cleaned)
+        #cleaned = re.sub(r'\s+\n', '', cleaned)
+        #cleaned = re.sub(r'\n{3,}', '\n', cleaned)
         #cleaned = cleaned.strip()
         return cleaned
 
