@@ -12,6 +12,7 @@ permissions:
 jobs:
   health-check:
     runs-on: ubuntu-latest
+    environment: PROD_JIRA_API_TOKEN
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
     
