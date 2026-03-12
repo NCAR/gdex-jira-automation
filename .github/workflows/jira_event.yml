@@ -1,4 +1,4 @@
-name: Process Jira Tickets on Jira Event
+name: Jira Event
 
 on:
   repository_dispatch:
