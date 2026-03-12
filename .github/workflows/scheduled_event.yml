@@ -2,7 +2,7 @@ name: Scheduled Events
 
 on:
   schedule:
-    - cron: '0/30 * * * *'   # every 30 minutes
+    - cron: '0 */6 * * *'
   workflow_dispatch:           # manual trigger
 
 permissions:
