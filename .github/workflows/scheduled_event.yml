@@ -1,4 +1,4 @@
-name: Gather run
+name: Scheduled Event
 
 on:
   workflow_dispatch:
