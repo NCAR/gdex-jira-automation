@@ -29,6 +29,8 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
   - **`config_loader.py`**: Loads configuration and environment variables.
 
 - **`tests/`**: Unit and integration tests for the automation.
+  
+- **`images/`**: Images for README.md
 
 ## How It Works
 
