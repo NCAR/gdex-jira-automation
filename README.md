@@ -12,7 +12,7 @@ This repository contains automation for handling Jira tickets using GitHub Actio
   - **`run_event.py`**: Handles event-driven Jira tickets.
   - **`run_scheduled.py`**: Executes scheduled tasks (cron jobs).
 
-- **`triager/`**: Decides which workflow (under `workflows/`) to run based on ticket type.
+- **`triager/`**: Decides which workflow (under `workflows/`) to run based on based on the ticket type and characteristics.
   - **`triager.py`**: Logic to choose the correct handler based on the ticket.
   - **`workflow_mapping.yaml`**: Maps request types to workflow handlers.
 
