@@ -2,8 +2,8 @@ name: Scheduled Events
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes (adjust as needed)
-  workflow_dispatch:  # manual trigger for both branches
+    - cron: '*/5 * * * *'
+  workflow_dispatch:           # manual trigger
 
 permissions:
   contents: write
@@ -44,7 +44,7 @@ jobs:
         run: |
           echo "Current directory: $(pwd)"
           python -c "import sys; print(sys.path)"
-
+      
       - name: Set PYTHONPATH
         run: |
           echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV  # Add the root directory to PYTHONPATH
@@ -53,19 +53,3 @@ jobs:
         run: python entrypoints/run_scheduled.py
         env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
-
-  # Cron job: This will only run for `main` branch
-  cron-job:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Ensures this job runs only for the `main` branch
-    schedule:
-      - cron: '*/5 * * * *'   # Schedule this cron job only on `main` branch
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run cron-specific task
-        run: |
-          echo "This is a scheduled task that only runs on the main branch."
