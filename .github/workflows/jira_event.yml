@@ -1,13 +1,9 @@
-name: Scheduled Events
+name: Jira Event
 
 on:
-  schedule:
-<<<<<<< HEAD
-    - cron: '0/30 * * * *'   # every 30 minutes
-=======
-    - cron: '*/5 * * * *'
->>>>>>> main
-  workflow_dispatch:           # manual trigger
+  repository_dispatch:
+    types: [jira-event]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,41 +15,32 @@ jobs:
     environment: PROD_JIRA_API_TOKEN
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
+        
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
+    
       - name: Pull latest changes
-        run: git pull origin ${{ github.ref_name }}   # pulls the current branch
-
+        run: git pull origin main
+      
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.11'
-
-      - name: Install Dependencies
+  
+      - name: Install Dependencies 
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          
-      - name: Print Working Directory and Python Path
-        run: |
-          echo "Current directory: $(pwd)"
-          python -c "import sys; print(sys.path)"
       
-      - name: Set PYTHONPATH
-        run: |
-          echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV  # Add the root directory to PYTHONPATH
-
       - name: Run Jira Client
-        run: python entrypoints/run_scheduled.py
+        run: python src/gdex_jira/jira_client.py
         env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}

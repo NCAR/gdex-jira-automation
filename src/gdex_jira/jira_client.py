@@ -4,6 +4,7 @@ import os
 import re
 import json
 import logging
+import random
 
 import requests
 from jira import JIRA, JIRAError
@@ -65,9 +66,9 @@ class GdexJiraAutomator:
             return None
 
         cleaned = re.sub(r'\{[^}]*\}', '', text)
-        cleaned = re.sub(r'\s+\n', '', cleaned)
-        cleaned = re.sub(r'\n{3,}', '', cleaned)
-        cleaned = cleaned.strip()
+        #cleaned = re.sub(r'\s+\n', '', cleaned)
+        #cleaned = re.sub(r'\n{3,}', '\n', cleaned)
+        #cleaned = cleaned.strip()
         return cleaned
 
     def _issue_to_dict(self,issue) -> dict[str, Any]:
@@ -174,6 +175,7 @@ class GdexJiraAutomator:
 
         for pattern in dsid_patterns:
             text = " ".join(map(str, ticket_text.values()))
+            print(text)
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
                 dsid = match.group().lower()
@@ -290,7 +292,7 @@ class GdexJiraAutomator:
         except Exception as e:
             logging.error(f"Unexpected error adding internal note to ticket {ticket_id}: {e}")
 
-    def assign_jira_ticket(self, ticket_id: str, email: str):
+    def assign_jira_ticket(self, ticket_id: str, email: str, note):
 
         """
         Assigns a JIRA ticket to a user.
@@ -304,7 +306,7 @@ class GdexJiraAutomator:
         try:
             self.jira.assign_issue(ticket_id, email)
             print(f"Successfully assigned ticket {ticket_id} to {email}")
-            note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
+            #note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script."
             self.add_internal_note_to_ticket(ticket_id, note)
         except JIRAError as e:
             logging.error(f"JIRA API error when assigning {ticket_id}: {e}")
@@ -325,7 +327,14 @@ def main():
             email = automator.get_dsid_owner_email(dsid)
             print(email)
             if email: 
-                automator.assign_jira_ticket(ticket_id, email)   
+                if email == 'chifan@ucar.edu':
+                    assignee_list = ["dattore@ucar.edu", "rpconroy@ucar.edu", "caliepayne@ucar.edu", "davestep@ucar.edu", "tcram@ucar.edu", "chiaweih@ucar.edu"]
+                    email = random.choice(assignee_list)
+                    note = f" Chi-fan's ticket randomly assigned to {email}. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script. \n \n Common issues below: \n \n OSDF Issue: Please add support@osg-htc.org as a ticket participant FIRST. Then, add a customer-visible comment (not an internal note) summarizing the issue so OSDF can view it. \n Spam: Change the assignee to it-helpabuse@ucar.edu. \n Not a DATAHELP ticket? Ask the customer to resubmit to the appropriate help desk. If you are unsure, point them to help@ucar.edu. Close the ticket."
+                    automator.assign_jira_ticket(ticket_id, email, note)
+                else:
+                    note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention caliepayne@ucar.edu in regards to issues with script. \n \n Common issues below: \n \n OSDF Issue: Please add support@osg-htc.org as a ticket participant FIRST. Then, add a customer-visible comment (not an internal note) summarizing the issue so OSDF can view it. \n Spam: Change the assignee to it-helpabuse@ucar.edu. \n Not a DATAHELP ticket? Ask the customer to resubmit to the appropriate help desk. If you are unsure, point them to help@ucar.edu. Close the ticket."
+                    automator.assign_jira_ticket(ticket_id, email, note)   
         else:
             print(f"No DSID found.\n")
     
