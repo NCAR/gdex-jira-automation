@@ -45,7 +45,11 @@ jobs:
         run: |
           echo "Current directory: $(pwd)"
           python -c "import sys; print(sys.path)"
-          
+      
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=$(pwd)/gdex-jira-automation" >> $GITHUB_ENV  # Add the root directory to PYTHONPATH
+
       - name: Run Jira Client
         run: python entrypoints/run_scheduled.py
         env:
