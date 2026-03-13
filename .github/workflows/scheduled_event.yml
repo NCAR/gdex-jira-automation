@@ -42,6 +42,6 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Jira Client
-        run: python entrypoints/run-scheduled.py
+        run: python entrypoints/run_scheduled.py
         env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
