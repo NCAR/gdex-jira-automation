@@ -1,6 +1,6 @@
 # gdex-jira-automation
 
-This repository contains automation for handling Jira tickets using GitHub Actions. It includes event-driven and scheduled workflows to process Jira tickets based on various triggers.
+This repository contains automation for handling DATAHELP Jira tickets using GitHub Actions. It includes event-driven and scheduled workflows to process Jira tickets based on various triggers.
 
 ## Directory Structure
 
