@@ -315,8 +315,9 @@ class GdexJiraAutomator:
             logging.error(f"Unexpected error assigning {ticket_id} to {email}: {e}")
 
     def assign_by_dsid(self, ticket: dict):
-        dsid = self.get_dsid_from_json(ticket)
         ticket_id = ticket['key']
+        print(f"Processing ticket {ticket_id} for assignment...")
+        dsid = self.get_dsid_from_json(ticket)
         if not dsid: 
             print(f"No DSID found for {ticket_id}\n")
             return
