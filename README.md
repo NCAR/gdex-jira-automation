@@ -6,7 +6,7 @@ This repository contains automation for handling Jira tickets using GitHub Actio
 
 - **`.github/workflows/`**: Contains GitHub Actions workflow YAML files.
   - **`jira_event.yml`**: Event-driven workflow triggered by Jira tickets.
-  - **`scheduled_jobs.yml`**: Cron-based workflow for time-driven tasks.
+  - **`scheduled_event.yml`**: Cron-based workflow for time-driven tasks.
 
 - **`entrypoints/`**: Scripts triggered by workflows.
   - **`run_event.py`**: Handles event-driven Jira tickets.
@@ -20,7 +20,7 @@ This repository contains automation for handling Jira tickets using GitHub Actio
   - **`event/`**: Handles event-driven workflows (e.g., ticket assignment, curation responses).
   - **`scheduled/`**: Handles scheduled workflows (e.g., stale ticket checker, clean sweep).
 
-- **`jira/`**: Jira-specific logic (API operations).
+- **`jira_client/`**: Jira-specific logic (API operations).
   - **`helpers.py`**: Encapsulates Jira API calls for querying, assigning, and updating tickets.
 
 - **`utils/`**: Shared utilities for the automation.
@@ -31,9 +31,9 @@ This repository contains automation for handling Jira tickets using GitHub Actio
 
 ## How It Works
 
-1. **Event-Driven**: Triggered when Jira sends a new ticket. `run_event.py` processes the ticket and triggers the correct workflow (assignment, curation).
-2. **Scheduled Jobs**: Triggered by cron (e.g., `jira_clean_sweep.py` checks unassigned tickets).
-3. **Triager**: Decides which workflow to call based on the ticket type.
+1. **Event-Driven**: Triggered when Jira sends a new ticket. `run_event.py` processes the ticket and triggers the correct workflow.
+    - **Triager**: Decides which event-driven workflow to call based on the ticket type and characteristics.
+2. **Scheduled Jobs**: Triggered by cron (e.g., `ticket_assignment.py` scans for all unassigned tickets).
 
 ## Requirements
 
