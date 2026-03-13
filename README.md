@@ -39,6 +39,3 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
 
 - Python 3.x
 - Dependencies listed in `requirements.txt`
-
----
----
