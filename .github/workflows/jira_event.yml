@@ -17,6 +17,11 @@ jobs:
       TZ: America/Denver  # Mountain Time (MDT/MST)
     
     steps:
+      - name: Use the API payload variables
+        run: |
+          echo "Ticket ID: ${{ github.event.inputs.ticket_id }}"
+          echo "Request Type: ${{ github.event.inputs.customer_request }}"
+          
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
