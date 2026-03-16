@@ -4,7 +4,7 @@ from workflows.scheduled.ticket_assignment import assign_unassigned_tickets
 
 def main():
     jira = JiraAuto(dry_run = True)
-    assign_unassigned_tickets(jira)
+    assign_unassigned_tickets(False)
 
 if __name__ == "__main__":
     main()
