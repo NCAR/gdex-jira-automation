@@ -10,7 +10,7 @@ def main():
     ticket_type = os.getenv("PAYLOAD_CUSTOMER_REQUEST", "General Data Help")
 
     #Intialize Jira client
-    jira = JiraAuto(dry_run = True)
+    jira = JiraAuto(dry_run = False)
 
     #Incoming ticket package
     incoming_ticket = {'jira_instance': jira,
