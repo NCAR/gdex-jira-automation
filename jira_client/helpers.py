@@ -17,6 +17,7 @@ from typing import Any
 class GdexJiraAutomator:
     def __init__(self, production_server: bool = True, dry_run: bool = False):
         self.dry_run = dry_run
+
         try:
             self.jira = self._get_jira_connection(production=production_server)
             logging.info("Connected to JIRA successfully.")
@@ -123,7 +124,7 @@ class GdexJiraAutomator:
             
     def get_unassigned_tickets(
             self,
-            service:bool=True) -> list[dict[str, Any]]:
+            service:bool=True, ticket_id = None) -> list[dict[str, Any]]:
         
         """
         Fetch unassigned tickets from JIRA for either Services Consulting or Curation Support.
@@ -136,7 +137,13 @@ class GdexJiraAutomator:
         if not self.jira:
             logging.warning("Cannot fetch unassigned tickets: Jira Connection not available.")
             return
-        
+        if ticket_id:
+            try:
+                issue = self.jira.issue(ticket_id)
+                return self._issue_to_dict(issue)
+            except JIRAError as e:
+                logging.error(f"Failed to fetch ticket {ticket_id} from Jira: {e}")
+                return None
         try:
             issues = self.jira.search_issues(
                 f'project = "NSF NCAR Research Data Help Desk" '
@@ -300,7 +307,7 @@ class GdexJiraAutomator:
         Returns:
             None
         """
-        if self.dry_run:
+        if self.dry_run == True:
             print(f"[DRY_RUN] Would assign {ticket_id} to {email}")
             return
         
@@ -315,11 +322,11 @@ class GdexJiraAutomator:
             logging.error(f"Unexpected error assigning {ticket_id} to {email}: {e}")
 
     def assign_by_dsid(self, ticket: dict):
-        ticket_id = ticket['key']
-        print(f"Processing ticket {ticket_id} for assignment...")
+        ticket_id = ticket.get("key")
+        print(f"Processing ticket {ticket_id} for assignment ...")
         dsid = self.get_dsid_from_json(ticket)
         if not dsid: 
-            print(f"No DSID found for {ticket_id}\n")
+            print(f"Ticket NOT assigned: No DSID found.\n")
             return
         email = self.get_dsid_owner_email(dsid)
         self.assign_jira_ticket(ticket_id, email)
