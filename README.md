@@ -9,7 +9,7 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
   - **`jira_event.yml`**: Event-driven workflow triggered by Jira tickets.
   - **`scheduled_event.yml`**: Cron-based workflow for time-driven tasks.
     
-- **`config**: Contains Jira configuration and field mapping YAMLs.
+- **`config`**: Contains Jira configuration and field mapping YAMLs.
   - **`jira_config.yaml`**: Jira prod and staging env variables
   - **`jira_field_mapping.yaml`**: [NOT YET AVALIABLE]
 
