@@ -3,6 +3,7 @@ name: Jira Event
 on:
   repository_dispatch:
     types: [jira-event]
+  workflow_dispatch: 
 
 permissions:
   contents: write
