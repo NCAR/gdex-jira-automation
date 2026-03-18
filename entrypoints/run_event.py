@@ -6,8 +6,8 @@ from jira_client.helpers import GdexJiraAutomator as JiraAuto
 
 def main():
     # Load Jira Payload env variables
-    ticket_id = os.getenv("PAYLOAD_TICKET_ID", "DATAHELP-5688")
-    ticket_type = os.getenv("PAYLOAD_CUSTOMER_REQUEST", "General Data Help")
+    ticket_id = os.getenv("PAYLOAD_TICKET_ID")
+    print(ticket_id)
 
     #Intialize Jira client
     jira = JiraAuto(dry_run = False)
