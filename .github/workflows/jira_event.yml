@@ -19,11 +19,9 @@ jobs:
     steps:
       - name: Use the API payload variables
         env:
-          PAYLOAD_TICKET_ID: ${{ github.event.inputs.ticket_id }}
-          PAYLOAD_CUSTOMER_REQUEST: ${{ github.event.inputs.customer_request }}
+          PAYLOAD_TICKET_ID: ${{ github.event.client_payload.ticket_id }}
         run: |
-          echo "Ticket ID: ${{ github.event.inputs.ticket_id }}"
-          echo "Request Type: ${{ github.event.inputs.customer_request }}"
+          echo "Ticket ID: ${{ github.event.client_payload.ticket_id }}"
           
       - name: Checkout repository
         uses: actions/checkout@v5

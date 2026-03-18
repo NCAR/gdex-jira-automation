@@ -3,8 +3,14 @@ from jira_client.helpers import GdexJiraAutomator as JiraAuto
 from workflows.scheduled.ticket_assignment import assign_unassigned_tickets
 
 def main():
-    jira = JiraAuto(dry_run = True)
+    config_files = ["config/jira_config.yaml", "triager/workflow-mapping.yaml"]
+    jira = JiraAuto(dry_run = True, config= config_files)
+
+# Scheduled Workflow Order
+    # 1. workflows.scheduled.ticket_assignment
     assign_unassigned_tickets(jira)
+
+    # 2. workflows.scheduled.stale_ticket_checker
 
 if __name__ == "__main__":
     main()

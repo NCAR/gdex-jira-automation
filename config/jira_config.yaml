@@ -1,0 +1,7 @@
+server:
+  production:
+    url: "https://ithelp.ucar.edu"
+    api_token_env_var: "PROD_JIRA_API_TOKEN"
+  staging:
+    url: "https://stage-ithelp.ucar.edu"
+    api_token_env_var: "TEST_JIRA_API_TOKEN"
