@@ -18,8 +18,6 @@ jobs:
     
     steps:
       - name: Use the API payload variables
-        env:
-          PAYLOAD_TICKET_ID: ${{ github.event.client_payload.ticket_id }}
         run: |
           echo "Ticket ID: ${{ github.event.client_payload.ticket_id }}"
           
@@ -57,3 +55,4 @@ jobs:
         run: python entrypoints/run_event.py
         env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
+          PAYLOAD_TICKET_ID: ${{ github.event.client_payload.ticket_id }}
