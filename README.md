@@ -11,7 +11,7 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
     
 - **`config/`**: Contains Jira configuration and field mapping YAMLs.
   - **`jira_config.yaml`**: Jira prod and staging env variables
-  - **`jira_field_mapping.yaml`**: [NOT YET AVALIABLE]
+  - **`jira_field_mapping.yaml`**: **[NOT YET AVALIABLE]**
 
 - **`entrypoints/`**: Scripts triggered by `.github/workflows`.
   - **`run_event.py`**: Handles event-driven Jira tickets.
@@ -29,10 +29,10 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
   - **`helpers.py`**: Encapsulates Jira API calls for querying, assigning, and updating tickets.
 
 - **`utils/`**: Shared utilities for the automation.
-  - **`logger.py`**: [NOT YET AVALIABLE] Central logging for all workflows.
+  - **`logger.py`**: **[NOT YET AVALIABLE]** Central logging for all workflows.
   - **`config_loader.py`**: Loads configuration files
 
-- **`tests/`**: [NOT YET AVALIABLE] Unit and integration tests for the automation.
+- **`tests/`**: **[NOT YET AVALIABLE]** Unit and integration tests for the automation.
   
 - **`images/`**: Images for README.md
 
