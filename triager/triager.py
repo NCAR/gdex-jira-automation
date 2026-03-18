@@ -41,7 +41,6 @@ def triage_tickets(ticket_details: dict, mapping_config: dict, jira_object):
   workflow_map = {}
   for group, info in mapping_config.items():
       workflow_map.update({ticket: info['workflow'] for ticket in info['tickets']})
-  print(workflow_map)
   # Get workflow function based on jira request type
   workflow = workflow_map.get(request_type, None)
 
