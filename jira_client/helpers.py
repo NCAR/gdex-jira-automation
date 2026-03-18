@@ -281,6 +281,9 @@ class GdexJiraAutomator:
         Returns:
             None
         """
+        if self.dry_run == True:
+            print(f"[DRY_RUN] Would comment the following on {ticket_id}: {comment}")
+            return 
         try:
             self.jira.add_comment(ticket_id, comment)
             logging.info(f"Successfully added comment to ticket {ticket_id}")
@@ -349,5 +352,33 @@ class GdexJiraAutomator:
             return
         email = self.get_dsid_owner_email(dsid)
         self.assign_jira_ticket(ticket_id, email)
-            
+    
+    def get_stale_tickets(self, service: bool = True):
+
+        if not self.jira:
+            logging.warning("Cannot fetch stale tickets: Jira Connection not available.")
+            return
+
+        try:
+            stale_issues = self.jira.search_issues(
+                f'project = "NSF NCAR Research Data Help Desk" '
+                'AND resolution = Unresolved '
+                'AND updated <= -14d' 
+            )
+            if not stale_issues:
+                print("No stale issues.")
+
+        except JIRAError as e:
+            logging.error(f"Failed to pull stale tickets from Jira: {e}")
+            return None
+
+        for issue in stale_issues:
+            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than 2 weeks. Needs review or closure."
+            self.add_comment_to_ticket(issue.key,comment= message)
+        #For tickets that have not been updated in past 
+        #only comments on tickets that have less than 4 tags [jiraAuto-StaleTicketTag]
+        #tickets = [self._check_for_stale_ticket_tags(issue.key) for issue in stale_issues]
+        #convert to dict
+        
+
         
