@@ -1,9 +1,6 @@
-#Intialize Jira client and run scheduled tasks
 import os
 from triager.triager import triage_tickets
 from jira_client.helpers import GdexJiraAutomator as JiraAuto
-from jira import JIRA, JIRAError
-# from workflows.scheduled.ticket_assignment import assign_unassigned_tickets
 
 def main():
 # Load Jira Payload env variables
