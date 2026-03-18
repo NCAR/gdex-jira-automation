@@ -8,6 +8,10 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
 - **`.github/workflows/`**: Contains GitHub Actions workflow YAML files.
   - **`jira_event.yml`**: Event-driven workflow triggered by Jira tickets.
   - **`scheduled_event.yml`**: Cron-based workflow for time-driven tasks.
+    
+- **`config**: Contains Jira configuration and field mapping YAMLs.
+  - **`jira_config.yaml`**: Jira prod and staging env variables
+  - **`jira_field_mapping.yaml`**: [NOT YET AVALIABLE]
 
 - **`entrypoints/`**: Scripts triggered by `.github/workflows`.
   - **`run_event.py`**: Handles event-driven Jira tickets.
@@ -19,16 +23,16 @@ This repository contains automation for handling DATAHELP Jira tickets using Git
 
 - **`workflows/`**: Contains the actual workflow logic.
   - **`event/`**: Handles event-driven workflows (e.g., ticket assignment, curation responses).
-  - **`scheduled/`**: Handles scheduled workflows (e.g., stale ticket checker, clean sweep).
+  - **`scheduled/`**: Handles scheduled workflows (e.g., stale ticket checker, ticket assignment).
 
 - **`jira_client/`**: Jira-specific logic (API operations).
   - **`helpers.py`**: Encapsulates Jira API calls for querying, assigning, and updating tickets.
 
 - **`utils/`**: Shared utilities for the automation.
-  - **`logger.py`**: Central logging for all workflows.
-  - **`config_loader.py`**: Loads configuration and environment variables.
+  - **`logger.py`**: [NOT YET AVALIABLE] Central logging for all workflows.
+  - **`config_loader.py`**: Loads configuration files
 
-- **`tests/`**: Unit and integration tests for the automation.
+- **`tests/`**: [NOT YET AVALIABLE] Unit and integration tests for the automation.
   
 - **`images/`**: Images for README.md
 
