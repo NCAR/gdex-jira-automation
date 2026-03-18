@@ -5,7 +5,7 @@ from workflows.scheduled.ticket_assignment import assign_unassigned_tickets
 def main():
 #0. Intialize Jira client
     config_files = ["config/jira_config.yaml", "triager/workflow-mapping.yaml"]
-    jira = JiraAuto(dry_run = True, config= config_files)
+    jira = JiraAuto(dry_run = False, config= config_files)
 
 #1. workflows.scheduled.ticket_assignment
     assign_unassigned_tickets(jira)
