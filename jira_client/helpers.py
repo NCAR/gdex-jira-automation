@@ -12,14 +12,26 @@ from collections import Counter
 import json
 from pathlib import Path
 from typing import Any
-
+from utils.config_loader import load_config_files
 
 class GdexJiraAutomator:
-    def __init__(self, production_server: bool = True, dry_run: bool = False):
+    def __init__(self, config: list = None, production_server: bool = True, dry_run: bool = False):
         self.dry_run = dry_run
 
+    # Load config files via load_config_files (utils/config_loader.py)
+        self.config = load_config_files(config)
+
+        # Select server config based on the environment
+        server_config = self.config["server"]["production"] if production_server else self.config["server"]["staging"]
+
+        # Get the API token and server URL from the selected server configuration
+        self.server = server_config["url"]
+        self.jira_api_token = os.getenv(server_config["api_token_env_var"])
+        
+        self.triager_workflow = self.config["workflow_map"]
+
         try:
-            self.jira = self._get_jira_connection(production=production_server)
+            self.jira = self._get_jira_connection()
             logging.info("Connected to JIRA successfully.")
         except EnvironmentError as e:
             logging.error(f"Environment variable missing: {e}")
@@ -35,10 +47,7 @@ class GdexJiraAutomator:
             self.jira = None
 
     def _get_jira_connection(
-            self,
-            production: bool = True,
-            prod_url= "https://ithelp.ucar.edu", 
-            test_url= "https://stage-ithelp.ucar.edu") -> JIRA:
+            self) -> JIRA:
         
         """
         Establishes a connection to the JIRA instance.
@@ -47,13 +56,12 @@ class GdexJiraAutomator:
         - TEST_JIRA_API_TOKEN for test/staging      
         """
         
-        server = prod_url if production else test_url
-        api_token = os.environ.get('PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN')
-        if not api_token:
+        #api_token = os.environ.get('PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN')
+        if not self.jira_api_token:
             raise EnvironmentError(
-                f"{'PROD_JIRA_API_TOKEN' if production else 'TEST_JIRA_API_TOKEN'} is not set in environment variables."
+                f"{'PROD_JIRA_API_TOKEN' if self.production_server else 'TEST_JIRA_API_TOKEN'} is not set in environment variables."
             )
-        jira_instance = JIRA(options={'server': server}, token_auth=api_token)
+        jira_instance = JIRA(options={'server': self.server}, token_auth=self.jira_api_token)
         return jira_instance
 
     @staticmethod
@@ -77,17 +85,28 @@ class GdexJiraAutomator:
         """
         Converts a JIRA issue object to a cleaned dictionary.
         """
+        #print(json.dumps(issue.raw['fields'], indent=2))
 
-        return {
-            "key": self._clean_text(issue.key),
-            "reporter": {
-                "name": self._clean_text(issue.fields.reporter.displayName),
-                "email": self._clean_text(issue.fields.reporter.emailAddress),
-            } if issue.fields.reporter else None,
-            "summary": self._clean_text(issue.fields.summary),
-            "description": self._clean_text(issue.fields.description),
-            "created": self._clean_text(issue.fields.created)
-        }
+        field_mapping = {
+        "key": lambda issue: self._clean_text(issue.key),
+        "reporter_name": lambda issue: self._clean_text(issue.fields.reporter.displayName) if issue.fields.reporter else None,
+        "reporter_email": lambda issue: self._clean_text(issue.fields.reporter.emailAddress) if issue.fields.reporter else None,
+        "summary": lambda issue: self._clean_text(issue.fields.summary),
+        "description": lambda issue: self._clean_text(issue.fields.description),
+        "created": lambda issue: self._clean_text(issue.fields.created),
+        "request_type": lambda issue: self._clean_text(issue.fields.customfield_10001.requestType.name)}
+    
+
+        # Construct the dictionary dynamically based on the mapping
+        issue_dict = {}
+        for field, extractor in field_mapping.items():
+            try:
+                issue_dict[field] = extractor(issue)
+            except AttributeError:
+                # Handle any missing or None fields gracefully
+                issue_dict[field] = None
+
+        return issue_dict
 
     def _has_been_assigned_before(self, issue:str) -> dict[str, bool]:
 

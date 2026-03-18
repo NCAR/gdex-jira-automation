@@ -1,16 +1,16 @@
+workflow_map:
+  Curation Tickets:
+    workflow: 
+    tickets:
+      - Suggest Dataset for GDEX
+      - Submit Your Data to GDEX
+      - Request for a proposal data management plan and budget
 
-Curation Tickets:
-  workflow: 
-  tickets:
-    - Suggest Dataset for GDEX
-    - Submit Your Data to GDEX
-    - Request for a proposal data management plan and budget
-
-Service Tickets:
-  workflow: workflows.event.ticket_assignment.ticket_assignment.assign_unassigned_tickets
-  tickets:
-    - General Data Help
-    - Dataset Questions
-    - Web Site Problems
-    - Web Services & APIs
-    - Data Download Problem
+  Service Tickets:
+    workflow: workflows.event.ticket_assignment.ticket_assignment.assign_unassigned_tickets
+    tickets:
+      - General Data Help
+      - Dataset Questions
+      - Web Site Problems
+      - Web Services & APIs
+      - Data Download Problem

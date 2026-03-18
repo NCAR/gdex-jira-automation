@@ -32,19 +32,20 @@ def get_workflow_function(path_str):
         print(f"[ERROR] Could not load workflow function from '{path_str}': {e}")
         return None
     
-def triage_tickets(ticket_details: dict, jira):
+def triage_tickets(ticket_details: dict, mapping_config: dict, jira_object):
+  
+  ticket_id = ticket_details['key']
+  request_type = ticket_details['request_type']
 
-  with open("triager/workflow-mapping.yaml", "r") as f:
-    mapping_yaml = yaml.safe_load(f)
-
+# Flatten mapping_config
   workflow_map = {}
-  for group, info in mapping_yaml.items():
+  for group, info in mapping_config.items():
       workflow_map.update({ticket: info['workflow'] for ticket in info['tickets']})
+  print(workflow_map)
+  # Get workflow function based on jira request type
+  workflow = workflow_map.get(request_type, None)
 
-
-  ticket_id = ticket_details["ticket_id"]
-  workflow = workflow_map.get(ticket_details['ticket_type'])
-
-  function = get_workflow_function(workflow)
-  function(jira, ticket_id)
+# Get workflow function based on jira request type
+  workflow_function = get_workflow_function(workflow)
+  workflow_function(jira_object, ticket_id)
 
