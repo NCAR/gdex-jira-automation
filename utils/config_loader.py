@@ -1,4 +1,4 @@
-import yaml
+import pyyaml
 import logging
 
 def load_config_files(config_files: list = None) -> dict:
