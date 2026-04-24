@@ -12,14 +12,24 @@ permissions:
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    environment: PROD_JIRA_API_TOKEN
+    environment: GDEX_JIRA_PRODUCTION_ENV
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
     
     steps:
-      - name: Use the API payload variables
+      - name: Use the JIRA API payload variables
         run: |
           echo "Ticket ID: ${{ github.event.client_payload.ticket_id }}"
+      
+      - name: Write Google API credentials to file
+        run: |
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+          echo "Google API credentials written to file."
+
+      - name: Write Google Token to file
+        run: |
+          echo "${{ secrets.GOOGLE_TOKEN }}" > token.json
+          echo "Google API token written to file."
           
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -30,9 +40,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-    
-      - name: Pull latest changes
-        run: git pull --rebase origin main
       
       - name: Set up Python
         uses: actions/setup-python@v6
