@@ -12,7 +12,7 @@ permissions:
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    environment: PROD_JIRA_API_TOKEN
+    environment: GDEX_JIRA_PRODUCTION_ENV
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
     
