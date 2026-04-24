@@ -25,3 +25,6 @@ venv.bak/
 .DS_Store
 Thumbs.db
 
+# Google Drive API cred files
+credentials.json
+token.json
