@@ -25,6 +25,12 @@ jobs:
         run: |
           echo "${{ secrets.GOOGLE_CREDENTIALS }}" > workflows/event/curation/credentials.json
           echo "Google API credentials written to file."
+          
+      - name: Verify credentials file (safe)
+        run: |
+          echo "Workspace: $GITHUB_WORKSPACE"
+          ls -la $GITHUB_WORKSPACE
+          test -f $GITHUB_WORKSPACE/credentials.json && echo "File exists"
 
       - name: Write Google Token to file
         run: |
