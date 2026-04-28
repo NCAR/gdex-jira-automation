@@ -23,9 +23,8 @@ jobs:
       
       - name: Write Google API credentials to file
         run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > $GITHUB_WORKSPACE/credentials.json
-          echo "Google API credentials written to file."
-
+          printf "%s" "${{ secrets.GOOGLE_CREDENTIALS }}" > "$GITHUB_WORKSPACE/credentials.json"
+        
       - name: Write Google Token to file
         run: |
           echo "${{ secrets.GOOGLE_TOKEN }}" > $GITHUB_WORKSPACE/token.json
