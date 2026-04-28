@@ -52,4 +52,6 @@ jobs:
         run: python entrypoints/run_event.py
         env:
           PROD_JIRA_API_TOKEN: ${{ secrets.PROD_JIRA_API_TOKEN }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
           PAYLOAD_TICKET_ID: ${{ github.event.client_payload.ticket_id }}
