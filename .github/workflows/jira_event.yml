@@ -28,7 +28,7 @@ jobs:
 
       - name: Write Google Token to file
         run: |
-          echo "${{ secrets.GOOGLE_TOKEN }}" > token.json
+          echo "${{ secrets.GOOGLE_TOKEN }}" > workflow/event/curation/credentials/token.json
           echo "Google API token written to file."
           
       - name: Checkout repository
