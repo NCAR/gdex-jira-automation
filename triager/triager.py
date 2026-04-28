@@ -45,8 +45,8 @@ def triage_tickets(ticket_details: dict, mapping_config: dict, jira_object):
   workflow = workflow_map.get(request_type, None)
 
 # Get workflow function based on jira request type
-# IMPORTANT: All workflow functions must accept jira_object and ticket_id as attributes
+# IMPORTANT: All workflow functions must accept jira_object and ticket detail as attributes
   workflow_function = get_workflow_function(workflow)
   if workflow_function:
-      workflow_function(jira_object, ticket_id)
+      workflow_function(jira_object, ticket_details)
 
