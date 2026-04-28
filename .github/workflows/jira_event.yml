@@ -20,21 +20,6 @@ jobs:
       - name: Use the JIRA API payload variables
         run: |
           echo "Ticket ID: ${{ github.event.client_payload.ticket_id }}"
-      
-      - name: Write Google API credentials to file
-        run: |
-          printf "%s" "${{ secrets.GOOGLE_CREDENTIALS }}" > "$GITHUB_WORKSPACE/credentials.json"
-
-      - name: Verify credentials file (safe)
-        run: |
-          echo "Workspace: $GITHUB_WORKSPACE"
-          ls -la $GITHUB_WORKSPACE
-          test -f $GITHUB_WORKSPACE/credentials.json && echo "File exists"
-          
-      - name: Write Google Token to file
-        run: |
-          echo "${{ secrets.GOOGLE_TOKEN }}" > $GITHUB_WORKSPACE/token.json
-          echo "Google API token written to file."
           
       - name: Checkout repository
         uses: actions/checkout@v5
