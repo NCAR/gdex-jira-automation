@@ -2,53 +2,81 @@
 from jira_client.helpers import GdexJiraAutomator as JiraAuto
 
 # External packages
-from jira import JIRA, JIRAError
 from datetime import datetime
 import os
-
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+import json
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+
 
 class GoogleSheetsClient:
-    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
     def __init__(self, credentials):
         self.service = build("sheets", "v4", credentials=credentials)
 
+DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
+
 class GoogleDriveClient:
-    SCOPES = ["https://www.googleapis.com/auth/drive"]
-
-    def __init__(self, credentials_path="credentials.json", token_path="token.json"):
-        credentials_path = os.path.join(os.environ["GITHUB_WORKSPACE"], "credentials.json")
-        self.credentials_path = credentials_path
-        self.token_path = token_path
-        self.creds = None
-        self.service = None
-
-        self._authenticate()
-        self._build_service()
+    def __init__(self):
+        self.creds = self._authenticate()
+        self.service = build("drive", "v3", credentials=self.creds)
 
     def _authenticate(self):
-        """Handles authentication and credential loading."""
-        if os.path.exists(self.token_path):
-            self.creds = Credentials.from_authorized_user_file(
-                self.token_path, self.SCOPES
-            )
+        creds = None
 
-        if not self.creds or not self.creds.valid:
-            if self.creds and self.creds.expired and self.creds.refresh_token:
-                self.creds.refresh(Request())
+        # =========================
+        # 1. LOAD TOKEN (CI OR LOCAL FILE)
+        # =========================
+        token_info = None
+
+        if "GOOGLE_TOKEN" in os.environ:
+            token_info = json.loads(os.environ["GOOGLE_TOKEN"])
+        elif os.path.exists("token.json"):
+            with open("token.json") as f:
+                token_info = json.load(f)
+
+        if token_info:
+            creds = Credentials.from_authorized_user_info(token_info, DRIVE_SCOPES)
+
+        # =========================
+        # 2. REFRESH IF POSSIBLE
+        # =========================
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+
+        # =========================
+        # 3. LOCAL ONLY OAUTH FLOW
+        # =========================
+        if not creds or not creds.valid:
+            # BLOCK CI FROM EVER ENTERING THIS PATH
+            if "GITHUB_ACTIONS" in os.environ:
+                raise RuntimeError(
+                    "Missing valid GOOGLE_TOKEN in GitHub Actions. "
+                    "OAuth flow is disabled in CI."
+                )
+
+            if "GOOGLE_CREDENTIALS" in os.environ:
+                client_info = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+                flow = InstalledAppFlow.from_client_config(client_info, DRIVE_SCOPES)
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_path, self.SCOPES
+                    "credentials.json",
+                    DRIVE_SCOPES
                 )
-                self.creds = flow.run_local_server(port=0)
 
-            with open(self.token_path, "w") as token:
-                token.write(self.creds.to_json())
+            creds = flow.run_local_server(
+                port=0,
+                access_type="offline",
+                prompt="consent"
+            )
+
+            # Save locally ONLY
+            with open("token.json", "w") as f:
+                f.write(creds.to_json())
+
+        return creds
 
     def _build_service(self):
         """Builds the Google Drive service."""
@@ -124,14 +152,30 @@ def generate_cost_summary(jira_instance, ticket_details):
     if ticket_details['data_size'] == '>10 TB':
         drive = GoogleDriveClient()
         sheets = GoogleSheetsClient(drive.creds)
+        
+
+        file = drive.service.files().get(
+        fileId="14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4",
+        fields="id, name, parents",
+        supportsAllDrives=True).execute()
+        print(file)
 
         file_to_copy_id = '14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4'
-        folder_id = '1nYdWG-pUyPHObLmANHyS-YI39dAi7ii4' #TEST FOLDER
+        folder_id = '1WXrvMO4QgplHYkYr0xL42hF6jwHGSX1V'
 
         new_file_name = f'FY{fiscal_year}_GDEX_DataManagementServices_Budget_{ticket_id}'
         file = drive.copy_file(file_to_copy_id, new_file_name, folder_id)
         if file:
             file_id = file.get("id")
+
+            drive.service.permissions().create(
+            fileId=file_id,
+            body={
+                "type": "user",
+                "role": "owner",
+                "emailAddress": "caliepayne@ucar.edu"
+            },
+            transferOwnership=True).execute()
 
             # Make file readable by anyone with the link
             drive.service.permissions().create(
