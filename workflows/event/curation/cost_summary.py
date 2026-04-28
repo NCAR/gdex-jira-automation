@@ -210,7 +210,7 @@ def generate_cost_summary(jira_instance, ticket_details):
 
             # Get a usable URL
             file_url = f"https://drive.google.com/file/d/{file_id}/view"
-            message = f"A cost summary was generated for {ticket_id}:\n {file_url}.\n\nData Size (TB): {data_size_tb}\nData Management Processing Services (DMPS) Required: {dmps_waived}\nData Management Storage Services Required: {dmps_waived}  \n\nNOTE: This FY{fiscal_year} estimate is based on user input and may not be accurate. Please confirm data size and cost waivers with ticket submitter."
+            message = f"A cost summary was generated for {ticket_id}:\n {file_url}.\n\nData Size (TB): {data_size_tb}\nData Management Processing Services (DMPS) Required: {dmps_waived}\nData Management Storage Services Required: {dmss_waived}  \n\nNOTE: This FY{fiscal_year} estimate is based on user input and may not be accurate. Please confirm data size and cost waivers with ticket submitter."
             jira_instance.add_comment_to_ticket(comment=message, ticket_id=ticket_id)
 
 
