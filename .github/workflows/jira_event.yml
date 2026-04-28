@@ -23,12 +23,12 @@ jobs:
       
       - name: Write Google API credentials to file
         run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > workflow/event/curation/credentials.json
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > workflows/event/curation/credentials.json
           echo "Google API credentials written to file."
 
       - name: Write Google Token to file
         run: |
-          echo "${{ secrets.GOOGLE_TOKEN }}" > workflow/event/curation/credentials/token.json
+          echo "${{ secrets.GOOGLE_TOKEN }}" > workflows/event/curation/credentials/token.json
           echo "Google API token written to file."
           
       - name: Checkout repository
