@@ -85,7 +85,7 @@ class GdexJiraAutomator:
         """
         Converts a JIRA issue object to a cleaned dictionary.
         """
-        #print(json.dumps(issue.raw['fields'], indent=2))
+        print(json.dumps(issue.raw['fields'], indent=2))
 
         field_mapping = {
         "key": lambda issue: self._clean_text(issue.key),
@@ -96,7 +96,7 @@ class GdexJiraAutomator:
         "created": lambda issue: self._clean_text(issue.fields.created),
         "request_type": lambda issue: self._clean_text(issue.fields.customfield_10001.requestType.name),
         "data_size": lambda issue: issue.fields.customfield_11501.value,
-        "data_size_tb": lambda issue: issue.fields.customfield_11600,
+        "data_size_tb": lambda issue: (issue.fields.customfield_11600 or issue.fields.customfield_12007),
         "dmss_waived": lambda issue: issue.fields.customfield_11703.value,
         "dmps_waived": lambda issue: issue.fields.customfield_11702.value,
         "lab": lambda issue: issue.fields.customfield_11504,

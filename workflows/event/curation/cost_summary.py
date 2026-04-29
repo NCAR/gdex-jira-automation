@@ -136,7 +136,7 @@ def generate_cost_summary(jira_instance, ticket_details):
     date_created = ticket_details['created']
     fiscal_year = get_fiscal_year(date_created)
     # TODO: Create FY_cost_summary map
-    data_size_tb = ticket_details['data_size_tb']
+    data_size_tb = float(ticket_details['data_size_tb'])
     # Yes to waived means services are not required (False), vice versa.
     flip_map = {
     "Yes": "False",
@@ -148,8 +148,8 @@ def generate_cost_summary(jira_instance, ticket_details):
     proposal_id = ticket_details['proposal_id']
     lab = ticket_details['lab']
     
-
-    if ticket_details['data_size'] == '>10 TB':
+    
+    if ticket_details['data_size_tb'] >= 10:
         drive = GoogleDriveClient()
         sheets = GoogleSheetsClient(drive.creds)
         
@@ -167,15 +167,6 @@ def generate_cost_summary(jira_instance, ticket_details):
         file = drive.copy_file(file_to_copy_id, new_file_name, folder_id)
         if file:
             file_id = file.get("id")
-
-            drive.service.permissions().create(
-            fileId=file_id,
-            body={
-                "type": "user",
-                "role": "owner",
-                "emailAddress": "caliepayne@ucar.edu"
-            },
-            transferOwnership=True).execute()
 
             # Make file readable by anyone with the link
             drive.service.permissions().create(
