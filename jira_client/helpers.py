@@ -85,7 +85,7 @@ class GdexJiraAutomator:
         """
         Converts a JIRA issue object to a cleaned dictionary.
         """
-        print(json.dumps(issue.raw['fields'], indent=2))
+        #print(json.dumps(issue.raw['fields'], indent=2))
 
         field_mapping = {
         "key": lambda issue: self._clean_text(issue.key),
