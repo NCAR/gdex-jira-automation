@@ -158,7 +158,7 @@ def generate_cost_summary(jira_instance, ticket_details):
         fileId="14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4",
         fields="id, name, parents",
         supportsAllDrives=True).execute()
-        print(file)
+        #print(file)
 
         file_to_copy_id = '14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4'
         folder_id = '1WXrvMO4QgplHYkYr0xL42hF6jwHGSX1V'
