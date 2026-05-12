@@ -158,7 +158,7 @@ def generate_cost_summary(jira_instance, ticket_details):
         fileId="14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4",
         fields="id, name, parents",
         supportsAllDrives=True).execute()
-        print(file)
+        #print(file)
 
         file_to_copy_id = '14TMWF-qqxKyWt5D_eE8XD2j0wfoFRxoYVP5MbiNbvQ4'
         folder_id = '1WXrvMO4QgplHYkYr0xL42hF6jwHGSX1V'
@@ -203,5 +203,7 @@ def generate_cost_summary(jira_instance, ticket_details):
             file_url = f"https://drive.google.com/file/d/{file_id}/view"
             message = f"A cost summary was generated for {ticket_id}:\n {file_url}.\n\nData Size (TB): {data_size_tb}\nData Management Processing Services (DMPS) Required: {dmps_waived}\nData Management Storage Services Required: {dmps_waived}  \n\nNOTE: This FY{fiscal_year} estimate is based on user input and may not be accurate. Please confirm data size and cost waivers with ticket submitter."
             jira_instance.add_comment_to_ticket(comment=message, ticket_id=ticket_id)
+        else:
+            return None
 
 
