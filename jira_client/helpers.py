@@ -419,7 +419,7 @@ class GdexJiraAutomator:
             return None
 
         for issue in stale_issues:
-            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than two weeks. If there is no further activity within the next six days, the ticket will be closed automatically."
+            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than two weeks. If there is no further activity within the next six days, the ticket will be closed automatically. If you want to bypass these messages switch priority level to 'Blocker'."
             self.add_comment_to_ticket(issue.key,comment= message)
         return stale_issues
         #For tickets that have not been updated in past 
