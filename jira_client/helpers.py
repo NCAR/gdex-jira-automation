@@ -4,6 +4,7 @@ import os
 import re
 import json
 import logging
+from datetime import timedelta, datetime
 
 import requests
 from jira import JIRA, JIRAError
@@ -359,11 +360,50 @@ class GdexJiraAutomator:
         email = self.get_dsid_owner_email(dsid)
         self.assign_jira_ticket(ticket_id, email)
     
+    def close_stale_ticket(self):
+        
+        if not self.jira:
+            logging.warning("Cannot close stale tickets: Jira Connection not available.")
+            return
+
+        try:
+            curation_issues = self.jira.search_issues(
+                f'project = "NSF NCAR Research Data Help Desk" '
+                'AND resolution = Unresolved '
+                'AND priority != Blocker'
+            )
+            if not curation_issues:
+                print("No stale issues.")
+
+        except JIRAError as e:
+            logging.error(f"Failed to pull stale tickets from Jira: {e}")
+            return None
+        
+        for ticket in curation_issues:
+            issue = self.jira.issue(ticket)
+            ticket_comments = issue.fields.comment.comments
+            date = datetime.today()
+
+            if ticket_comments:
+                last_comment = ticket_comments[-1]
+                comment_body = last_comment.body
+                comment_date = datetime.strptime(last_comment.created.split("T", 1)[0],"%Y-%m-%d")
+                expired_time = comment_date + timedelta(days=6)
+
+
+                if "JIRA_AUTO__STALE_TICKET" in comment_body and date>= expired_time:
+                    self.jira.transition_issue(ticket, "101")
+                    message = "[JIRA_AUTO__CLOSE_TICKET] -- Ticket closure due to this ticket being inactive."
+                    self.add_comment_to_ticket(issue.key,comment= message)
+            
+
     def get_stale_tickets(self, service: bool = True):
 
         if not self.jira:
             logging.warning("Cannot fetch stale tickets: Jira Connection not available.")
             return
+
+        self.close_stale_ticket()
 
         try:
             stale_issues = self.jira.search_issues(
@@ -379,8 +419,9 @@ class GdexJiraAutomator:
             return None
 
         for issue in stale_issues:
-            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than 2 weeks. Needs review or closure."
+            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than two weeks. If there is no further activity within the next six days, the ticket will be closed automatically."
             self.add_comment_to_ticket(issue.key,comment= message)
+        return stale_issues
         #For tickets that have not been updated in past 
         #only comments on tickets that have less than 4 tags [jiraAuto-StaleTicketTag]
         #tickets = [self._check_for_stale_ticket_tags(issue.key) for issue in stale_issues]
