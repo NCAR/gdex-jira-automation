@@ -408,6 +408,7 @@ class GdexJiraAutomator:
         try:
             stale_issues = self.jira.search_issues(
                 f'project = "NSF NCAR Research Data Help Desk" '
+                'AND priority != Hold '
                 'AND resolution = Unresolved '
                 'AND updated <= -14d' 
             )
