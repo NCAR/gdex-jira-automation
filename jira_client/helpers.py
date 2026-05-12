@@ -370,7 +370,7 @@ class GdexJiraAutomator:
             curation_issues = self.jira.search_issues(
                 f'project = "NSF NCAR Research Data Help Desk" '
                 'AND resolution = Unresolved '
-                'AND priority != Blocker'
+                'AND priority != Hold'
             )
             if not curation_issues:
                 print("No stale issues.")
@@ -419,7 +419,7 @@ class GdexJiraAutomator:
             return None
 
         for issue in stale_issues:
-            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than two weeks. If there is no further activity within the next six days, the ticket will be closed automatically. If you want to bypass these messages switch priority level to 'Blocker'."
+            message = "[JIRA_AUTO__STALE_TICKET] -- This ticket has been inactive for more than two weeks. If there is no further activity within the next six days, the ticket will be closed automatically. If you want to bypass these messages switch priority level to 'Hold'."
             self.add_comment_to_ticket(issue.key,comment= message)
         return stale_issues
         #For tickets that have not been updated in past 
