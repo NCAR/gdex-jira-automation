@@ -5,7 +5,7 @@ from jira_client.helpers import GdexJiraAutomator as JiraAuto
 
 def main():
 # Load Jira Payload env variables
-    incoming_ticket_id = os.getenv("PAYLOAD_TICKET_ID") or "DATAHELP-5803"
+    incoming_ticket_id = os.getenv("PAYLOAD_TICKET_ID") or "DATAHELP-5837"
 
 #Intialize Jira client
     config_files = ["config/jira_config.yaml", "triager/workflow-mapping.yaml"]

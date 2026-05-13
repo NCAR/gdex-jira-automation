@@ -136,7 +136,10 @@ def generate_cost_summary(jira_instance, ticket_details):
     date_created = ticket_details['created']
     fiscal_year = get_fiscal_year(date_created)
     # TODO: Create FY_cost_summary map
-    data_size_tb = float(ticket_details['data_size_tb'])
+    if ticket_details['data_size_tb']:
+        data_size_tb = float(ticket_details['data_size_tb'])
+    else:
+        return
     # Yes to waived means services are not required (False), vice versa.
     flip_map = {
     "Yes": "False",
@@ -150,6 +153,9 @@ def generate_cost_summary(jira_instance, ticket_details):
     
     
     if ticket_details['data_size_tb'] >= 10:
+        if jira_instance.dry_run:
+            print(f"[DRY_RUN] Would generate cost summary for {ticket_id}")
+            return
         drive = GoogleDriveClient()
         sheets = GoogleSheetsClient(drive.creds)
         
