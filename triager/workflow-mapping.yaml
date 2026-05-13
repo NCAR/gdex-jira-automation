@@ -4,6 +4,12 @@ workflow_map:
     tickets:
       - Suggest Dataset for GDEX
       - Submit Your Data to GDEX
+
+  DMP Tickets:
+    workflow:
+      - workflows.event.curation.cost_summary.generate_cost_summary
+      - workflows.event.curation.switch_status.generate_switch_status
+    tickets:
       - Request for a proposal data management plan and budget
 
   Service Tickets:
