@@ -392,9 +392,15 @@ class GdexJiraAutomator:
 
 
                 if "JIRA_AUTO__STALE_TICKET" in comment_body and date>= expired_time:
-                    self.jira.transition_issue(ticket, "101")
-                    message = "[JIRA_AUTO__CLOSE_TICKET] -- Ticket closure due to this ticket being inactive."
-                    self.add_comment_to_ticket(issue.key,comment= message)
+                    transitions = self.jira.transitions(ticket)
+                    print(ticket)
+                    for t in transitions:
+                        if "resolved" in t["name"]:
+                            resolved_transition = t["id"]
+                            print(f"Ticket {ticket} transitioned to Resolved (transition id: {resolved_transition})")
+                            self.jira.transition_issue(ticket, t["id"])
+                            message = "[JIRA_AUTO__CLOSE_TICKET] -- Ticket closure due to this ticket being inactive for more than 20 days."
+                            self.add_comment_to_ticket(issue.key,comment= message)
             
 
     def get_stale_tickets(self, service: bool = True):
