@@ -7,7 +7,7 @@ def prioritize_incoming_ticket(jira_instance, ticket_details):
     # Check if the reporter's email contains any international TLD
     if any(reporter_email.endswith(tld) for tld in international_tlds):
         issue.update(fields={"priority": {"name": "Low"}})
-
+        return
     if reporter_email.endswith(".edu"):
         issue.update(fields={"priority": {"name": "High"}})
         
