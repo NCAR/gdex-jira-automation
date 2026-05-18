@@ -13,7 +13,9 @@ workflow_map:
       - Request for a proposal data management plan and budget
 
   Service Tickets:
-    workflow: workflows.event.services.ticket_assignment.ticket_assignment.assign_unassigned_tickets
+    workflow: 
+    - workflows.event.services.ticket_assignment.assign_unassigned_tickets
+    - workflows.event.services.ticket_priority.prioritize_incoming_ticket
     tickets:
       - General Data Help
       - Dataset Questions
