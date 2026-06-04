@@ -360,6 +360,10 @@ class GdexJiraAutomator:
         email = self.get_dsid_owner_email(dsid)
         self.assign_jira_ticket(ticket_id, email)
     
+    def assign_by_dsrqst(self, ticket: dict):
+        ticket_id = ticket.get("key")
+        reporter_email = ticket.get("reporter_email")
+        
     def close_stale_ticket(self):
         
         if not self.jira:
