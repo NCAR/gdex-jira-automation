@@ -3,6 +3,12 @@ workflow_map:
     workflow: workflows.event.curation.cost_summary.generate_cost_summary
     tickets:
       - Suggest Dataset for GDEX
+
+  Submission Tickets:
+    workflow: 
+      - workflows.event.curation.cost_summary.generate_cost_summary
+      - workflows.event.curation.auto_response.dda_response.generate_dda_response
+    tickets:
       - Submit Your Data to GDEX
 
   DMP Tickets:
