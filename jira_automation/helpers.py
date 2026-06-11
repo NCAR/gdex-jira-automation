@@ -62,7 +62,7 @@ class GdexJiraAutomator:
             raise EnvironmentError(
                 f"{'PROD_JIRA_API_TOKEN' if self.production_server else 'TEST_JIRA_API_TOKEN'} is not set in environment variables."
             )
-        jira_instance = JIRA(options={'server': self.server}, token_auth=self.jira_api_token)
+        jira_instance = JIRA(options={'server': self.server}, token_auth=self.jira_api_token, get_server_info=False)
         return jira_instance
 
     @staticmethod
