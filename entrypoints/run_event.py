@@ -1,6 +1,6 @@
 import os
 from triager.triager import triage_tickets
-from jira_client.helpers import GdexJiraAutomator as JiraAuto
+from jira_automation.helpers import GdexJiraAutomator as JiraAuto
 
 
 def main():

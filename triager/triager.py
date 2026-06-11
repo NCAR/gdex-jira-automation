@@ -1,5 +1,5 @@
 #Intialize Jira client and run scheduled tasks
-#from jira_client.helpers import GdexJiraAutomator as JiraAuto
+#from jira_automation.helpers import GdexJiraAutomator as JiraAuto
 #from workflows.scheduled.ticket_assignment import assign_unassigned_tickets
 import yaml
 import importlib

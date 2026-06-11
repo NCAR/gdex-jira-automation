@@ -1,5 +1,5 @@
 # Internal Packages
-from jira_client.helpers import GdexJiraAutomator as JiraAuto
+from jira_automation.helpers import GdexJiraAutomator as JiraAuto
 
 # External packages
 from datetime import datetime
