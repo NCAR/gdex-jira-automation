@@ -33,7 +33,7 @@ def get_workflow_function(path_str):
         return None
     
 def triage_tickets(ticket_details: dict, mapping_config: dict, jira_object):
-  
+  print(ticket_details)
   ticket_id = ticket_details['key']
   request_type = ticket_details['request_type']
 
