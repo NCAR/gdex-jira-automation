@@ -1,4 +1,4 @@
-![DATAHELP Banner](images/datahelp_banner.png)
+![DATAHELP Banner](images/DATAHELP_banner.png)
 
 ## Overview
 
