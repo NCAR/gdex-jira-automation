@@ -6,6 +6,12 @@ Automation for handling [DATAHELP](https://ithelp.ucar.edu) Jira tickets using G
 
 ---
 
+## Documentation
+
+- [Developer Guide](docs/developer-guide.md) — setup, local development, how to add workflows, debugging
+
+---
+
 ## How It Works
 
 ### Event-Driven (`jira_event.yml`)
@@ -90,8 +96,4 @@ Secrets are managed in the `GDEX_JIRA_PRODUCTION_ENV` GitHub Actions environment
 - Python 3.11
 - Dependencies listed in `requirements.txt`
 
----
 
-## Documentation
-
-- [Developer Guide](docs/developer-guide.md) — setup, local development, how to add workflows, debugging
