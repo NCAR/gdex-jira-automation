@@ -2,10 +2,9 @@ import os
 from triager.triager import triage_tickets
 from jira_automation.helpers import GdexJiraAutomator as JiraAuto
 
-
 def main():
 # Load Jira Payload env variables
-    incoming_ticket_id = os.getenv("PAYLOAD_TICKET_ID") or "DATAHELP-5899"
+    incoming_ticket_id = os.getenv("PAYLOAD_TICKET_ID") or "DATAHELP-5901"
 
 #Intialize Jira client
     config_files = ["config/jira_config.yaml", "triager/workflow-mapping.yaml"]
