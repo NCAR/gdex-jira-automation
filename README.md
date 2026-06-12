@@ -4,10 +4,6 @@
 
 Automation for handling [DATAHELP](https://ithelp.ucar.edu) Jira tickets using GitHub Actions. Supports two modes: event-driven (triggered per ticket) and scheduled (cron-based batch processing).
 
----
-
-## Documentation
-
 - [Developer Guide](docs/developer-guide.md) — setup, local development, how to add workflows, debugging
 
 ---
