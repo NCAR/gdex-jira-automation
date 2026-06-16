@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   health-check:
-    runs-on: ubuntu-latest
+    runs-on: CIRRUS-4x8
     environment: GDEX_JIRA_PRODUCTION_ENV
     env:
       TZ: America/Denver  # Mountain Time (MDT/MST)
