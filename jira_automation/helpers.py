@@ -5,6 +5,7 @@ import re
 import json
 import logging
 from datetime import timedelta, datetime
+import random
 
 import requests
 from jira import JIRA, JIRAError
