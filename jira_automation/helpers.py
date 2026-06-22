@@ -354,19 +354,18 @@ class GdexJiraAutomator:
         print(f"Processing ticket {ticket_id} for assignment ...")
         dsid = self.get_dsid_from_json(ticket)
         if not dsid: 
-            print(f"Ticket NOT assigned: No DSID found.\n")
+            self.assign_by_random(ticket_id)
             return
         email = self.get_dsid_owner_email(dsid)
         note = f"Ticket assigned to {email} based on DSID ownership. This was done automatically via script. Please @-mention Calie Payne in Jira ticket if help is needed."
         self.assign_jira_ticket(ticket_id, email, note)
 
-    def assign_by_random(self, ticket: dict):
-        ticket_id = ticket.get("key")
-        print(f"Randomly assigning {ticket_id} ...")
+    def assign_by_random(self, ticket_id):
         random_assignees = ["caliepayne@ucar.edu", "davestep@ucar.edu", "dattore@ucar.edu", "rpconroy@ucar.edu", "tcram@ucar.edu", "chiaweih@ucar.edu"]
-        random_choice = random.choice(random_assignees)
-        note = f"RANDOM ASSIGNMENT: Ticket assigned to {random_choice}. Please reassign if you are not the appropriate person. This was done automatically via script. Please @-mention Calie Payne in Jira ticket if help is needed. "
-        self.assign_jira_ticket(ticket_id, email, note)
+        random_email = random.choice(random_assignees)
+        print(f"Randomly assigned {ticket_id} to {random_email}")
+        note = f"RANDOM ASSIGNMENT: Ticket assigned to {random_email}. Please reassign if you are not the appropriate person. This was done automatically via script. Please @-mention Calie Payne in Jira ticket if help is needed. "
+        self.assign_jira_ticket(ticket_id, random_email, note)
     
     def assign_by_dsrqst(self, ticket: dict):
         ticket_id = ticket.get("key")
