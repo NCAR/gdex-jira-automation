@@ -141,13 +141,23 @@ class GdexJiraAutomator:
                 if change.field == 'assignee':
                     history.append(change.toString)
         DATAHELP_count = Counter(history)
-        if DATAHELP_count["DATAHELP-SERVICES-CONSULTING"] > 1 or DATAHELP_count["DATAHELP-CURATION-SUPPORT"] > 1:
+
+        assigned_before_via_comment = False
+        for comment in ticket.fields.comment.comments:
+            author_email = getattr(comment.author, 'emailAddress', None)
+            if author_email == "caliepayne@ucar.edu" and ("RANDOM ASSIGNMENT" in comment.body or "DSID ownership" in comment.body):
+                assigned_before_via_comment = True
+                break
+
+        if (DATAHELP_count["DATAHELP-SERVICES-CONSULTING"] > 1
+                or DATAHELP_count["DATAHELP-CURATION-SUPPORT"] > 1
+                or assigned_before_via_comment):
             print(f"Issue {ticket.key} has been assigned before.")
             ticket_info = [ticket.key, True]
             print(ticket_info)
             return ticket_info
         else:
-            return [ticket.key, True]
+            return [ticket.key, False]
             
     def get_unassigned_tickets(
             self,
@@ -184,9 +194,13 @@ class GdexJiraAutomator:
             return None
         
         #only stores tickets that have not been assigned before
-        tickets = [self._has_been_assigned_before(issue.key) for issue in issues]
+        filtered_issues = []
+        for issue in issues:
+            result = self._has_been_assigned_before(issue.key)
+            if result is not None and not result[1]:
+                filtered_issues.append(issue)
         #convert to dict
-        tickets = [self._issue_to_dict(issue) for issue in issues]
+        tickets = [self._issue_to_dict(issue) for issue in filtered_issues]
         return tickets
 
     @staticmethod
