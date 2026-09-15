@@ -177,10 +177,14 @@ class GdexJiraAutomator:
         if ticket_id:
             try:
                 issue = self.jira.issue(ticket_id)
-                return self._issue_to_dict(issue)
             except JIRAError as e:
                 logging.error(f"Failed to fetch ticket {ticket_id} from Jira: {e}")
                 return None
+            result = self._has_been_assigned_before(ticket_id)
+            if result is not None and result[1]:
+                print(f"Ticket {ticket_id} has already been assigned before; skipping.")
+                return None
+            return self._issue_to_dict(issue)
         try:
             issues = self.jira.search_issues(
                 f'project = "NSF NCAR Research Data Help Desk" '
