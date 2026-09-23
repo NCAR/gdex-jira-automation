@@ -91,6 +91,7 @@ class GdexJiraAutomator:
 
         field_mapping = {
         "key": lambda issue: self._clean_text(issue.key),
+        "assignee": lambda issue: self._clean_text(issue.fields.assignee.name) if issue.fields.assignee else None,
         "reporter_name": lambda issue: self._clean_text(issue.fields.reporter.displayName) if issue.fields.reporter else None,
         "reporter_email": lambda issue: self._clean_text(issue.fields.reporter.emailAddress) if issue.fields.reporter else None,
         "summary": lambda issue: self._clean_text(issue.fields.summary),
@@ -372,7 +373,10 @@ class GdexJiraAutomator:
         ticket_id = ticket.get("key")
         print(f"Processing ticket {ticket_id} for assignment ...")
         dsid = self.get_dsid_from_json(ticket)
-        if not dsid: 
+        if not dsid:
+            if ticket.get("assignee") != "DATAHELP-SERVICES-CONSULTING":
+                print(f"Skipping auto-assignment for {ticket_id}: no DSID and assignee is not DATAHELP-SERVICES-CONSULTING.")
+                return
             self.assign_by_random(ticket_id)
             return
         email = self.get_dsid_owner_email(dsid)
