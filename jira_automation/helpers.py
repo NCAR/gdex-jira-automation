@@ -139,8 +139,8 @@ class GdexJiraAutomator:
         history = []
         for item in ticket.changelog.histories:
             for change in item.items:
-                if change.field == 'assignee':
-                    history.append(change.toString)
+                if change.field == 'assignee' and change.toString:
+                    history.append(change.toString.upper())
         DATAHELP_count = Counter(history)
 
         assigned_before_via_comment = False
@@ -151,7 +151,7 @@ class GdexJiraAutomator:
                 break
 
         if (DATAHELP_count["DATAHELP-SERVICES-CONSULTING"] > 1
-                or DATAHELP_count["DATAHELP-CURATION-SUPPORT"] > 1
+                or DATAHELP_count["DATAHELP-CURATION-SUPPORT"] > 1  # keys are already upper-cased above
                 or assigned_before_via_comment):
             print(f"Issue {ticket.key} has been assigned before.")
             ticket_info = [ticket.key, True]
@@ -374,7 +374,8 @@ class GdexJiraAutomator:
         print(f"Processing ticket {ticket_id} for assignment ...")
         dsid = self.get_dsid_from_json(ticket)
         if not dsid:
-            if ticket.get("assignee") != "DATAHELP-SERVICES-CONSULTING":
+            assignee = ticket.get("assignee")
+            if (assignee or "").upper() != "DATAHELP-SERVICES-CONSULTING":
                 print(f"Skipping auto-assignment for {ticket_id}: no DSID and assignee is not DATAHELP-SERVICES-CONSULTING.")
                 return
             self.assign_by_random(ticket_id)
